@@ -6,6 +6,8 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import play.api.Configuration
 
+import java.util.UUID
+
 trait SparkTestSupport {
 
   protected implicit val logger: Logger = LogManager.getLogger(this.getClass)
@@ -13,8 +15,6 @@ trait SparkTestSupport {
   protected implicit val configuration: Configuration = Configuration(ConfigFactory.parseString(
     """
       |spark {
-      |  appName = "TestSpec"
-      |  master = "local[*]"
       |  config {}
       |  db {
       |    config {
@@ -25,8 +25,8 @@ trait SparkTestSupport {
       |}
       |""".stripMargin))
 
-  protected val appName: String = configuration.get[String]("spark.appName")
-  protected val master: String = configuration.get[String]("spark.master")
+  protected val appName: String = s"app_${UUID.randomUUID().toString}"
+  protected val master: String = "local[*]"
   protected val sparkConf: Map[String, String] = configuration.get[Map[String, String]]("spark.config")
   protected val dbConf: Map[String, String] = configuration.get[Map[String, String]]("spark.db.config")
 

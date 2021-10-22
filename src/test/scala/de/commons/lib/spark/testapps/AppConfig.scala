@@ -12,9 +12,6 @@ trait AppConfig {
   implicit val configuration: Configuration = Configuration(ConfigFactory.parseString(
     """
       |spark {
-      |  appName = "SparkApp"
-      |  master = "local[*]"
-      |  config {}
       |  db {
       |    config {
       |      "driver": "com.mysql.cj.jdbc.Driver"
