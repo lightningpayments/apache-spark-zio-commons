@@ -4,7 +4,11 @@ import de.commons.lib.spark.environments.SparkR.SparkEnvironment
 import de.commons.lib.spark.environments.io.{SparkDBDataFrameReader, SparkDataFrameWriter}
 import de.commons.lib.spark.runnable.SparkIORunnable
 import de.commons.lib.spark.testapps.sql101.app.logic.services.DbService
+import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent
+import org.apache.spark.sql.functions.{col, udf}
 import zio.{ExitCode, URIO, ZIO}
+
+import java.util.UUID
 
 /**
  * NOTICE: check db connection before you run this app!!!
@@ -33,8 +37,14 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
 
   private val env = new SparkEnvironment(configuration, logger) with SparkDBDataFrameReader with SparkDataFrameWriter
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
-    val io: ZIO[SparkEnvironment with SparkDBDataFrameReader with SparkDataFrameWriter, Throwable, Unit] = for {
+  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
+    SparkIORunnable[SparkEnvironment, SparkDBDataFrameReader with SparkDataFrameWriter, Unit](program1 *> program2)
+      .run
+      .provide(env)
+      .exitCode
+
+  private val program1: ZIO[SparkEnvironment with SparkDBDataFrameReader with SparkDataFrameWriter, Throwable, Unit] =
+    for {
       _ <- ZIO.environment[SparkEnvironment with SparkDBDataFrameReader with SparkDataFrameWriter]
       dbService = new DbService(url, properties)
 
@@ -44,10 +54,17 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
       _ <- dbService.getAgentsStatistics.map(_.show())
     } yield ()
 
-    SparkIORunnable[SparkEnvironment, SparkDBDataFrameReader with SparkDataFrameWriter, Unit](io)
-      .run
-      .provide(env)
-      .exitCode
-  }
+  private val program2: ZIO[SparkEnvironment with SparkDBDataFrameReader with SparkDataFrameWriter, Throwable, Unit] =
+    for {
+      _         <- ZIO.environment[SparkEnvironment with SparkDBDataFrameReader with SparkDataFrameWriter]
+      dbService  = new DbService(url, properties)
+      agents0   <- dbService.getAgents.map { df =>
+        import df.sparkSession.implicits._
+        val f = udf((_: String) => UUID.randomUUID().toString.take(5))
+        df.withColumn(colName = "agentCode", f(col(colName = "agentCode"))).as[Agent]
+      }
+      _         <- dbService.insertAgents(agents0)
+      agents1   <- dbService.getAgents
+    } yield agents1.show()
 
 }

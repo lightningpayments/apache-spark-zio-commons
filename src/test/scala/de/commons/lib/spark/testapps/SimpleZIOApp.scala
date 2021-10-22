@@ -11,19 +11,11 @@ import zio.{ExitCode, Task, URIO, ZEnv, ZIO}
 
 private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
 
-  override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    ZIO
-      .environment[SparkEnvironment with RandomNumberEnv]
-      .>>>(SparkIORunnable[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show)).run)
-      .provide(new SparkEnvironment(configuration, logger) with RandomNumberEnv)
-      .exitCode
-
   trait RandomNumberEnv {
     val randomMathGen: Task[Double] = Task(math.random())
   }
 
   private final case class ArticleId(value: Long) extends AnyVal
-
   private object ArticleId {
     implicit val encoders: Encoder[ArticleId] = Encoders.product[ArticleId]
     implicit def monoid(implicit sparkSession: SparkSession): Monoid[Dataset[ArticleId]] = {
@@ -35,30 +27,37 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
         }
       }
     }
-
     def from(rdd: RDD[Int])(implicit spark: SparkSession): Dataset[ArticleId] = {
       import spark.implicits._
       rdd.toDS.as[ArticleId]
     }
   }
 
-  private val program: ZIO[SparkEnvironment with RandomNumberEnv, Throwable, Dataset[Long]] =
-    for {
-      env <- ZIO.environment[SparkEnvironment with RandomNumberEnv]
-      ds  <- env.sparkM.flatMap { implicit spark =>
-        import ArticleId._
-        import spark.implicits._
+  override def run(args: List[String]): URIO[ZEnv, ExitCode] =
+    ZIO
+      .environment[SparkEnvironment with RandomNumberEnv]
+      .>>>(SparkIORunnable[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show)).run)
+      .provide(new SparkEnvironment(configuration, logger) with RandomNumberEnv)
+      .exitCode
 
-        (for {
-          a <- pi.map(ArticleId.from)
-          b <- pi.map(ArticleId.from)
-          c <- pi.map(ArticleId.from)
-          d <- Task.succeed(ArticleId(42L)).map(n => spark.createDataset(n :: Nil))
-        } yield a |+| b |+| c |+| d)
-          .map(_.agg(sum(columnName = "value")).first().getLong(0) :: Nil)
-          .map(spark.createDataset(_))
-      }
-    } yield ds
+  private val program: ZIO[SparkEnvironment with RandomNumberEnv, Throwable, Dataset[Long]] =
+    ZIO.accessM[SparkEnvironment with RandomNumberEnv] { env =>
+      for {
+        ds  <- env.sparkM.flatMap { implicit spark =>
+          import ArticleId._
+          import spark.implicits._
+
+          (for {
+            a <- pi.map(ArticleId.from)
+            b <- pi.map(ArticleId.from)
+            c <- pi.map(ArticleId.from)
+            d <- Task.succeed(ArticleId(42L)).map(n => spark.createDataset(n :: Nil))
+          } yield a |+| b |+| c |+| d)
+            .map(_.agg(sum(columnName = "value")).first().getLong(0) :: Nil)
+            .map(spark.createDataset(_))
+        }
+      } yield ds
+    }
 
   private val pi: ZIO[SparkEnvironment with RandomNumberEnv, Throwable, RDD[Int]] =
     ZIO.accessM[SparkEnvironment with RandomNumberEnv] { env =>

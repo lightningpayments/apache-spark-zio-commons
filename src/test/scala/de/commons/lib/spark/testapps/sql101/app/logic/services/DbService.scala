@@ -16,11 +16,11 @@ private[sql101] final class DbService(url: String, properties: java.util.Propert
     for {
       env <- ZIO.environment[SparkEnvironment with SparkDBDataFrameReader]
       _   <- env.loggerM.map(_.debug("select all agents"))
-      ds  <- readerM.map(Agent.select).map { ds =>
+      df  <- readerM.map(Agent.select).map { ds =>
         import ds.sparkSession.implicits._
         ds.withColumn("country", when($"country".isNull, lit("null")))
       }
-    } yield ds
+    } yield df
 
   def insertAgents(ds: Dataset[Agent]): ZIO[SparkEnvironment with SparkDataFrameWriter, Throwable, Dataset[Agent]] =
     for {
