@@ -5,6 +5,7 @@ import cats.implicits._
 import de.commons.lib.spark._
 import zio.Task
 import zio.interop.catz._
+import MonadControl._
 
 class MonadControlSpec extends TestSpec with SparkTestSupport {
 
@@ -22,35 +23,48 @@ class MonadControlSpec extends TestSpec with SparkTestSupport {
     }
   }
 
-  "MonadControl#optionLiftInOrElse" must {
+  "MonadControl#optionLiftMOrElse" must {
     "work for different kinds of Monads" in {
-      MonadControl.optionLiftInOrElse[List, Int](Some(2))(List(3, 1)) mustBe List(2)
-      MonadControl.optionLiftInOrElse[List, Int](None)(List(1, 3)) mustBe List(1, 3)
+      MonadControl.optionLiftMOrElse[List, Int](Some(2))(List(3, 1)) mustBe List(2)
+      MonadControl.optionLiftMOrElse[List, Int](None)(List(1, 3)) mustBe List(1, 3)
 
-      MonadControl.optionLiftInOrElse[Option, Int](Some(1))(Some(2)) mustBe Some(1)
-      MonadControl.optionLiftInOrElse[Option, Int](None)(Some(2)) mustBe Some(2)
+      MonadControl.optionLiftMOrElse[Option, Int](Some(1))(Some(2)) mustBe Some(1)
+      MonadControl.optionLiftMOrElse[Option, Int](None)(Some(2)) mustBe Some(2)
+    }
+    "convenience: work for different kinds of Monads" in {
+      Some(2).liftMOrElse(List(3, 1)) mustBe List(2)
+      none[Int].liftMOrElse[List](List(1, 3)) mustBe List(1, 3)
+
+      Some(1).liftMOrElse[Option](Some(2)) mustBe Some(1)
+      none[Int].liftMOrElse[Option](Some(2)) mustBe Some(2)
     }
     "work for Id" in {
-      val withValue = MonadControl.optionLiftInOrElse[Id, String](Some("foo"))("bar")
+      val withValue = MonadControl.optionLiftMOrElse[Id, String](Some("foo"))("bar")
       withValue mustBe "foo"
 
-      val withoutValue = MonadControl.optionLiftInOrElse[Id, String](None)("bar")
+      val withoutValue = MonadControl.optionLiftMOrElse[Id, String](None)("bar")
       withoutValue mustBe "bar"
     }
   }
 
-  "MonadControl#optionLiftIn" must {
+  "MonadControl#optionLiftM" must {
     "work for different kinds of Applicatives" in {
-      MonadControl.optionLiftIn[List, String, String](Some("a")) { List(_, "b") } mustBe List(Some("a"), Some("b"))
-      MonadControl.optionLiftIn[List, String, String](None) { List(_, "b") } mustBe List(None)
-      MonadControl.optionLiftIn[Option, String, String](Some("a")) { x => Some(s"b$x") } mustBe Some(Some("ba"))
-      MonadControl.optionLiftIn[Option, String, String](None) { _ => Some("b") } mustBe Some(None)
+      MonadControl.optionLiftM[List, String, String](Some("a")) { List(_, "b") } mustBe List(Some("a"), Some("b"))
+      MonadControl.optionLiftM[List, String, String](None) { List(_, "b") } mustBe List(None)
+      MonadControl.optionLiftM[Option, String, String](Some("a")) { x => Some(s"b$x") } mustBe Some(Some("ba"))
+      MonadControl.optionLiftM[Option, String, String](None) { _ => Some("b") } mustBe Some(None)
+    }
+    "convenience: work for different kinds of Applicatives" in {
+      Some("a").liftM { List(_, "b") } mustBe List(Some("a"), Some("b"))
+      none[String].liftM[List, String] { List(_, "b") } mustBe List(None)
+      Some("a").liftM[Option, String] { x => Some(s"b$x") } mustBe Some(Some("ba"))
+      none[String].liftM[Option, String] { _ => Some("b") } mustBe Some(None)
     }
     "work for Task" in {
-      val withValue = MonadControl.optionLiftIn[Task, String, String](Some("foo"))(Task.succeed(_))
+      val withValue = MonadControl.optionLiftM[Task, String, String](Some("foo"))(Task.succeed(_))
       whenReady(withValue)(_ mustBe Right(Some("foo")))
 
-      val withoutValue = MonadControl.optionLiftIn[Task, String, String](None)(Task.succeed(_))
+      val withoutValue = MonadControl.optionLiftM[Task, String, String](None)(Task.succeed(_))
       whenReady(withoutValue)(_ mustBe Right(None))
     }
   }
