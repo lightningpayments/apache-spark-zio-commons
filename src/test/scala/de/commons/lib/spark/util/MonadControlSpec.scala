@@ -22,42 +22,37 @@ class MonadControlSpec extends TestSpec with SparkTestSupport {
     }
   }
 
-  "MonadControl#pureOrElseA" must {
+  "MonadControl#optionLiftInOrElse" must {
     "work for different kinds of Monads" in {
-      MonadControl.pureOrElse[List, Int](Some(2))(List(3, 1)) mustBe List(2)
-      MonadControl.pureOrElse[List, Int](None)(List(1, 3)) mustBe List(1, 3)
+      MonadControl.optionLiftInOrElse[List, Int](Some(2))(List(3, 1)) mustBe List(2)
+      MonadControl.optionLiftInOrElse[List, Int](None)(List(1, 3)) mustBe List(1, 3)
 
-      MonadControl.pureOrElse[Option, Int](Some(1))(Some(2)) mustBe Some(1)
-      MonadControl.pureOrElse[Option, Int](None)(Some(2)) mustBe Some(2)
+      MonadControl.optionLiftInOrElse[Option, Int](Some(1))(Some(2)) mustBe Some(1)
+      MonadControl.optionLiftInOrElse[Option, Int](None)(Some(2)) mustBe Some(2)
     }
     "work for Id" in {
-      val withValue = MonadControl.pureOrElse[Id, String](Some("foo"))("bar")
+      val withValue = MonadControl.optionLiftInOrElse[Id, String](Some("foo"))("bar")
       withValue mustBe "foo"
 
-      val withoutValue = MonadControl.pureOrElse[Id, String](None)("bar")
+      val withoutValue = MonadControl.optionLiftInOrElse[Id, String](None)("bar")
       withoutValue mustBe "bar"
     }
   }
 
-  "MonadControl#optional" must {
+  "MonadControl#optionLiftIn" must {
     "work for different kinds of Applicatives" in {
-      MonadControl.optional[List, String, String](Some("a")) {
-        List(_, "b")
-      } mustBe List(Some("a"), Some("b"))
-      MonadControl.optional[List, String, String](None) {
-        List(_, "b")
-      } mustBe List(None)
-      MonadControl.optional[Option, String, String](Some("a")) { x => Some(s"b$x") } mustBe Some(Some("ba"))
-      MonadControl.optional[Option, String, String](None) { _ => Some("b") } mustBe Some(None)
+      MonadControl.optionLiftIn[List, String, String](Some("a")) { List(_, "b") } mustBe List(Some("a"), Some("b"))
+      MonadControl.optionLiftIn[List, String, String](None) { List(_, "b") } mustBe List(None)
+      MonadControl.optionLiftIn[Option, String, String](Some("a")) { x => Some(s"b$x") } mustBe Some(Some("ba"))
+      MonadControl.optionLiftIn[Option, String, String](None) { _ => Some("b") } mustBe Some(None)
     }
-    "work for IO" in {
-      val withValue = MonadControl.optional[Task, String, String](Some("foo"))(Task.succeed(_))
+    "work for Task" in {
+      val withValue = MonadControl.optionLiftIn[Task, String, String](Some("foo"))(Task.succeed(_))
       whenReady(withValue)(_ mustBe Right(Some("foo")))
 
-      val withoutValue = MonadControl.optional[Task, String, String](None)(Task.succeed(_))
+      val withoutValue = MonadControl.optionLiftIn[Task, String, String](None)(Task.succeed(_))
       whenReady(withoutValue)(_ mustBe Right(None))
     }
   }
 
 }
-
