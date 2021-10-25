@@ -5,7 +5,7 @@ import de.commons.lib.spark.models.SqlQuery
 import org.apache.spark.sql.{Encoder, Encoders}
 import zio.ZIO
 
-class SparkDBDataFrameReaderSpec extends TestSpec with SparkTestSupport with MockDbTestSupport {
+class SparkDbDataFrameReaderSpec extends TestSpec with SparkTestSupport with MockDbTestSupport {
 
   private case class Dummy(id: Int)
 
@@ -18,14 +18,14 @@ class SparkDBDataFrameReaderSpec extends TestSpec with SparkTestSupport with Moc
       val insert = "INSERT INTO `sparkIODbDataFrameReader` values (1)"
 
       val program = for {
-        env <- ZIO.environment[SparkDBDataFrameReader]
+        env <- ZIO.environment[SparkDbDataFrameReader]
         ds   = env.reader(spark)(url, properties)(
           SqlQuery("(SELECT * FROM sparkIODbDataFrameReader) as q1")
         ).as[Dummy]
       } yield ds.count()
 
-      mockDB(url, dbConf)(createTable, insert) {
-        whenReady(program.provide(SparkDBDataFrameReader))(_ mustBe Right(1))
+      mockDb(url, dbConf)(createTable, insert) {
+        whenReady(program.provide(SparkDbDataFrameReader))(_ mustBe Right(1))
       }
     }
   }

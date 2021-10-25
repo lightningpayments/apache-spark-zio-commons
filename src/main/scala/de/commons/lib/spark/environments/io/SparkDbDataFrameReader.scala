@@ -5,7 +5,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.util.Properties
 
-trait SparkDBDataFrameReader {
+trait SparkDbDataFrameReader {
   def reader(
     sparkSession: SparkSession)(
     url: String,
@@ -14,6 +14,6 @@ trait SparkDBDataFrameReader {
   ): DataFrame = sparkSession.read.jdbc(url, query.value, properties)
 }
 
-object SparkDBDataFrameReader extends SparkDBDataFrameReader {
+object SparkDbDataFrameReader extends SparkDbDataFrameReader {
   type DataFrameReader = SqlQuery => DataFrame
 }

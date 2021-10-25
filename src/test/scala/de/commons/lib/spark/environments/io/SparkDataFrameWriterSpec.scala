@@ -24,7 +24,7 @@ class SparkDataFrameWriterSpec extends TestSpec with SparkTestSupport with MockD
         } yield ()
       }
 
-      mockDB(url = url, dbConfig = dbConf)(query = query) {
+      mockDb(url = url, dbConfig = dbConf)(query = query) {
         whenReady(program.provide(SparkDataFrameWriter))(_ mustBe Right(()))
       }
     }
