@@ -1,6 +1,6 @@
-package de.commons.lib.spark.runnable
+package de.commons.lib.spark
 
-import de.commons.lib.spark.{SparkTestSupport, TestSpec}
+import de.commons.lib.spark
 import de.commons.lib.spark.environments.SparkR.SparkEnvironment
 import de.commons.lib.spark.errors.SparkRunnableThrowable
 import zio.{Task, ZIO}
@@ -29,7 +29,7 @@ class SparkIOSpec extends TestSpec with SparkTestSupport {
         s <- Task.succeed("foo")
       } yield s
 
-      val runnable = SparkIO[SparkEnvironment, Any, String](io).run
+      val runnable = spark.SparkIO[SparkEnvironment, Any, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
     }
   }

@@ -1,8 +1,8 @@
 package de.commons.lib.spark.testapps.sql101.app
 
+import de.commons.lib.spark.SparkIO
 import de.commons.lib.spark.environments.SparkR.SparkEnvironment
-import de.commons.lib.spark.environments.io.{SparkDbDataFrameReader, SparkDataFrameWriter}
-import de.commons.lib.spark.runnable.SparkIO
+import de.commons.lib.spark.environments.io.{SparkDataFrameWriter, SparkDbDataFrameReader}
 import de.commons.lib.spark.testapps.sql101.app.logic.services.DbService
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent
 import org.apache.spark.sql.functions.{col, udf}
@@ -35,17 +35,19 @@ import java.util.UUID
  */
 private[testapps] object SimpleDbApp extends zio.App with AppConfig {
 
+  private type R = SparkDbDataFrameReader with SparkDataFrameWriter
+
   private val env = new SparkEnvironment(configuration, logger) with SparkDbDataFrameReader with SparkDataFrameWriter
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    SparkIO[SparkEnvironment, SparkDbDataFrameReader with SparkDataFrameWriter, Unit](program1 *> program2)
+    SparkIO[SparkEnvironment, R, Unit](program1 *> program2)
       .run
       .provide(env)
       .exitCode
 
-  private val program1: ZIO[SparkEnvironment with SparkDbDataFrameReader with SparkDataFrameWriter, Throwable, Unit] =
+  private val program1: ZIO[SparkEnvironment with R, Throwable, Unit] =
     for {
-      _ <- ZIO.environment[SparkEnvironment with SparkDbDataFrameReader with SparkDataFrameWriter]
+      _ <- ZIO.environment[SparkEnvironment with R]
       dbService = new DbService(url, properties)
 
       _ <- dbService.getAgents.map(_.show())
@@ -54,9 +56,9 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
       _ <- dbService.getAgentsStatistics.map(_.show())
     } yield ()
 
-  private val program2: ZIO[SparkEnvironment with SparkDbDataFrameReader with SparkDataFrameWriter, Throwable, Unit] =
+  private val program2: ZIO[SparkEnvironment with R, Throwable, Unit] =
     for {
-      _         <- ZIO.environment[SparkEnvironment with SparkDbDataFrameReader with SparkDataFrameWriter]
+      _         <- ZIO.environment[SparkEnvironment with R]
       dbService  = new DbService(url, properties)
       agents0   <- dbService.getAgents.map { df =>
         import df.sparkSession.implicits._
