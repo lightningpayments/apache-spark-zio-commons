@@ -5,10 +5,12 @@ import de.commons.lib.spark.environments.SparkR.SparkEnvironment
 import de.commons.lib.spark.environments.io.{SparkDataFrameWriter, SparkDbDataFrameReader}
 import de.commons.lib.spark.testapps.sql101.app.logic.services.DbService
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{col, udf}
-import zio.{ExitCode, URIO, ZIO}
+import zio.{ExitCode, Task, URIO, ZIO}
 
 import java.util.UUID
+import scala.language.postfixOps
 
 /**
  * NOTICE: check db connection before you run this app!!!
@@ -39,34 +41,32 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
 
   private val env = new SparkEnvironment(configuration, logger) with SparkDbDataFrameReader with SparkDataFrameWriter
 
+  private val dbService = new DbService(url, properties)
+
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    SparkIO[SparkEnvironment, R, Unit](program1 *> program2)
+    SparkIO[SparkEnvironment, R, Unit](program1 >>= program2)
       .run
       .provide(env)
       .exitCode
 
-  private val program1: ZIO[SparkEnvironment with R, Throwable, Unit] =
+  private val program1: ZIO[SparkEnvironment with R, Throwable, DataFrame] =
     for {
-      _ <- ZIO.environment[SparkEnvironment with R]
-      dbService = new DbService(url, properties)
+      agents <- dbService.getAgents
+      _      <- Task(agents.show)
+      _      <- dbService.getCustomers.map(_.show())
+      _      <- dbService.getOrders.map(_.show())
+      _      <- dbService.getAgentsStatistics.map(_.show())
+    } yield agents
 
-      _ <- dbService.getAgents.map(_.show())
-      _ <- dbService.getCustomers.map(_.show())
-      _ <- dbService.getOrders.map(_.show())
-      _ <- dbService.getAgentsStatistics.map(_.show())
-    } yield ()
+  private val program2: DataFrame => ZIO[SparkEnvironment with R, Throwable, Unit] = df => {
+    import df.sparkSession.implicits._
+    val takeRandomAgentCode = udf((_: String) => UUID.randomUUID().toString.take(5))
 
-  private val program2: ZIO[SparkEnvironment with R, Throwable, Unit] =
     for {
-      _         <- ZIO.environment[SparkEnvironment with R]
-      dbService  = new DbService(url, properties)
-      agents0   <- dbService.getAgents.map { df =>
-        import df.sparkSession.implicits._
-        val f = udf((_: String) => UUID.randomUUID().toString.take(5))
-        df.withColumn(colName = "agentCode", f(col(colName = "agentCode"))).as[Agent]
-      }
-      _         <- dbService.insertAgents(agents0)
-      agents1   <- dbService.getAgents
+      agents0 <- Task(df.withColumn(colName = "agentCode", takeRandomAgentCode(col(colName = "agentCode"))).as[Agent])
+      _       <- dbService.insertAgents(agents0)
+      agents1 <- dbService.getAgents
     } yield agents1.show()
+  }
 
 }
