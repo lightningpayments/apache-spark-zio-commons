@@ -1,6 +1,6 @@
 package de.commons.lib.spark.testapps.sql101.test.logic.tables
 
-import de.commons.lib.spark.environments.io.SparkDBDataFrameReader
+import de.commons.lib.spark.environments.io.SparkDbDataFrameReader
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Customer
 import de.commons.lib.spark.testapps.sql101.test.CreateTablesSupport
 import de.commons.lib.spark.{MockDbTestSupport, SparkTestSupport, TestSpec}
@@ -14,12 +14,12 @@ class CustomerSpec extends TestSpec with SparkTestSupport with MockDbTestSupport
 
   "Customer#select" must {
     "return one customer dataset" in withSparkSession { spark => logger =>
-      mockDB(url, dbConf)(createTableCustomerQuery, customer.insert) {
+      mockDb(url, dbConf)(createTableCustomerQuery, customer.insert) {
         val program = (for {
-          env    <- ZIO.environment[SparkDBDataFrameReader]
+          env    <- ZIO.environment[SparkDbDataFrameReader]
           reader  = env.reader(spark)(url, properties)(_)
           ds      = Customer.select(reader)
-        } yield ds).provide(SparkDBDataFrameReader)
+        } yield ds).provide(SparkDbDataFrameReader)
 
         whenReady(program)(_.map(_.collect().toList) mustBe Right(customer :: Nil))
       }

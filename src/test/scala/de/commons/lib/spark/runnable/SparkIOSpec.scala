@@ -5,9 +5,9 @@ import de.commons.lib.spark.environments.SparkR.SparkEnvironment
 import de.commons.lib.spark.errors.SparkRunnableThrowable
 import zio.{Task, ZIO}
 
-class SparkIORunnableSpec extends TestSpec with SparkTestSupport {
+class SparkIOSpec extends TestSpec with SparkTestSupport {
 
-  "SparkIORunnable#run" must {
+  "SparkIO#run" must {
     "throws an error" in {
       val t = new Throwable
       val io = for {
@@ -15,7 +15,7 @@ class SparkIORunnableSpec extends TestSpec with SparkTestSupport {
         s <- Task.effect[String](throw t)
       } yield s
 
-      val runnable = SparkIORunnable[SparkEnvironment, Any, String](io).run
+      val runnable = SparkIO[SparkEnvironment, Any, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
         case Right(_) => fail()
         case Left(ex) =>
@@ -29,7 +29,7 @@ class SparkIORunnableSpec extends TestSpec with SparkTestSupport {
         s <- Task.succeed("foo")
       } yield s
 
-      val runnable = SparkIORunnable[SparkEnvironment, Any, String](io).run
+      val runnable = SparkIO[SparkEnvironment, Any, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
     }
   }

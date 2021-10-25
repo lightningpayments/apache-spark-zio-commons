@@ -3,7 +3,7 @@ package de.commons.lib.spark.testapps
 import cats.Monoid
 import cats.implicits._
 import de.commons.lib.spark.environments.SparkR._
-import de.commons.lib.spark.runnable.SparkIORunnable
+import de.commons.lib.spark.runnable.SparkIO
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Dataset, Encoder, Encoders, SparkSession}
@@ -36,7 +36,7 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
     ZIO
       .environment[SparkEnvironment with RandomNumberEnv]
-      .>>>(SparkIORunnable[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show)).run)
+      .>>>(SparkIO[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show)).run)
       .provide(new SparkEnvironment(configuration, logger) with RandomNumberEnv)
       .exitCode
 
