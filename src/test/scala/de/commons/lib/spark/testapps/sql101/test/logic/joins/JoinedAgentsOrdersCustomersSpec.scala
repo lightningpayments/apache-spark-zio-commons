@@ -23,7 +23,7 @@ class JoinedAgentsOrdersCustomersSpec
     Order(200100, 1000.00F, 600.00F, LocalDate.parse("2008-08-01"), "C00013", "A001", "SOD")
 
   "JoinedAgentsOrdersCustomers#select" must {
-    "return one order dataset" in withSparkSession { spark => logger =>
+    "return one order dataset" in withSparkSession { spark => _ =>
       mockDb(url, dbConf)(query =
         createTableOrdersQuery,
         createTableCustomerQuery,

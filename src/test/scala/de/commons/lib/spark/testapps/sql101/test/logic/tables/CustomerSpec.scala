@@ -13,7 +13,7 @@ class CustomerSpec extends TestSpec with SparkTestSupport with MockDbTestSupport
     Customer("C00001", "Micheal", "New York", "New York", "USA", 2, 3000, 5000, 2000, 6000, "CCCC", "A008")
 
   "Customer#select" must {
-    "return one customer dataset" in withSparkSession { spark => logger =>
+    "return one customer dataset" in withSparkSession { spark => _ =>
       mockDb(url, dbConf)(createTableCustomerQuery, customer.insert) {
         val program = (for {
           env    <- ZIO.environment[SparkDbDataFrameReader]

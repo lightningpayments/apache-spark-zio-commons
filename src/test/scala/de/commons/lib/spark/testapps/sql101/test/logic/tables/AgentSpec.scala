@@ -12,7 +12,7 @@ class AgentSpec extends TestSpec with SparkTestSupport with MockDbTestSupport wi
   private val agent = Agent("A001", "Alex", "London", "0.13", "0001-111", Some("England"))
 
   "Agent#select" must {
-    "return one agent dataset" in withSparkSession { spark => logger =>
+    "return one agent dataset" in withSparkSession { spark => _ =>
       mockDb(url, dbConf)(createTableAgentsQuery, agent.insert) {
         val program = (for {
           env    <- ZIO.environment[SparkDbDataFrameReader]
