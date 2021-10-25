@@ -39,14 +39,12 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
 
   private type R = SparkDbDataFrameReader with SparkDataFrameWriter
 
-  private val env = new SparkEnvironment(configuration, logger) with SparkDbDataFrameReader with SparkDataFrameWriter
-
   private val dbService = new DbService(url, properties)
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
     SparkIO[SparkEnvironment, R, Unit](program1 >>= program2)
       .run
-      .provide(env)
+      .provide(new SparkEnvironment(configuration, logger) with SparkDbDataFrameReader with SparkDataFrameWriter)
       .exitCode
 
   private val program1: ZIO[SparkEnvironment with R, Throwable, DataFrame] =

@@ -8,6 +8,7 @@ import zio.{Task, ZIO}
 class SparkDataFrameWriterSpec extends TestSpec with SparkTestSupport with MockDbTestSupport {
 
   private case class Dummy(id: Int)
+  private implicit val ordering: Ordering[Dummy] = (x: Dummy, y: Dummy) => x.id compare y.id
 
   private implicit val encoders: Encoder[Dummy] = Encoders.product[Dummy]
   private val url: String = "jdbc:h2:mem:testdb;MODE=MYSQL"
@@ -49,7 +50,7 @@ class SparkDataFrameWriterSpec extends TestSpec with SparkTestSupport with MockD
       mockDb(url = url, dbConfig = dbConf)(query = query) {
         whenReady(program.provide(new SparkDataFrameWriter with SparkDbDataFrameReader)) {
           case Left(_)   => fail()
-          case Right(ds) => ds.collect().toList mustEqual List(Dummy(1), Dummy(2))
+          case Right(ds) => ds.collect().toList.sorted mustBe List(Dummy(1), Dummy(2)).sorted
         }
       }
     }

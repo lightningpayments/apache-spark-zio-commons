@@ -1,6 +1,5 @@
 package de.commons.lib.spark.environments
 
-import cats.implicits._
 import de.commons.lib.spark.environments.SparkR._
 import de.commons.lib.spark.{SparkTestSupport, TestSpec}
 import org.apache.log4j.Logger
@@ -61,26 +60,6 @@ class SparkEnvironmentSpec extends TestSpec with SparkTestSupport {
       val env = new SparkEnvironment(configuration, logger)
       val runtime = zio.Runtime(env, Platform.default)
       Try(runtime.unsafeRun(env.raiseErrorR(new Throwable))).toOption mustBe None
-    }
-  }
-
-  "SparkEnvironment combine test" must {
-    "return a 'foobar' string" in {
-      val g: String => (SparkSession, Logger) => String = {
-        foo => {
-          case (_, _) => foo
-        }
-      }
-      val f: (SparkSession, Logger) => String = { case (_, _) => "bar" }
-      val p = (for {
-        env    <- ZIO.environment[SparkEnvironment]
-        p1      = env.liftF(Option("foo"))(g)
-        p2      = env.applyR(ZIO(f))
-        maybe  <- p1.flatMap(ops => p2.map(bar => ops.map(_ + bar)))
-        foobar  = maybe.fold(fail)(identity)
-      } yield foobar).provide(new SparkEnvironment(configuration, logger))
-
-      whenReady(p)(_ mustBe Right("foobar"))
     }
   }
 

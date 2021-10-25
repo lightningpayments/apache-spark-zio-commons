@@ -60,9 +60,6 @@ private[sql101] final class DbService(url: String, properties: java.util.Propert
     } yield reader
 
   private val writerM: URIO[SparkEnvironment with SparkDataFrameWriter, DataFrameWriter] =
-    for {
-      env    <- ZIO.environment[SparkEnvironment with SparkDataFrameWriter]
-      writer  = env.insert(url, properties)
-    } yield writer
+    ZIO.environment[SparkEnvironment with SparkDataFrameWriter].map(_.insert(url, properties))
 
 }
