@@ -9,6 +9,9 @@ import java.util.Properties
 trait SparkDataFrameWriter {
   def insert(url: String, properties: Properties): DataFrameWriter = (df, table) =>
     df.write.mode(SaveMode.Append).jdbc(url, table.value, properties)
+
+  def update(url: String, properties: Properties): DataFrameWriter = (df, table) =>
+    df.write.mode(SaveMode.Overwrite).jdbc(url, table.value, properties)
 }
 
 object SparkDataFrameWriter extends SparkDataFrameWriter {
