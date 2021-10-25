@@ -1,6 +1,6 @@
 # README
 
-## v1.0.0
+## v1.0.1
 
 - added ZIO as Environment requirements to use SparkSession (ReaderT)
 - SparkR as main environment signature for contravariant custom environments
