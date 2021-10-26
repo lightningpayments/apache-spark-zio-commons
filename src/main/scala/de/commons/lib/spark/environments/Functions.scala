@@ -1,6 +1,6 @@
 package de.commons.lib.spark.environments
 
-import cats.Monad
+import cats.Functor
 import de.commons.lib.spark.SparkSessionLoader
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
@@ -35,17 +35,17 @@ private[environments] trait Functions {
       case (session, logger) => ff.map(_(session, logger))
     }
 
-  def liftF[F[_], A, B](fa: => F[A])(f: A => (SparkSession, Logger) => B)(implicit M: Monad[F]): Task[F[B]] =
+  def liftF[F[_], A, B](f: A => (SparkSession, Logger) => B)(fa: => F[A])(implicit M: Functor[F]): Task[F[B]] =
     ZIO.tupledPar(sparkM, loggerM).flatMap {
-      case (session, logger) => Task(M.map(fa)(f(_)(session, logger)))
+      case (session, logger) => Task(M.fmap(fa)(f(_)(session, logger)))
     }
 
   def liftR[R, F[_], A, B](
-    fa: => F[A])(
     f: A => (SparkSession, Logger) => B)(
-    implicit M: Monad[F]
+    fa: => F[A])(
+    implicit M: Functor[F]
   ): ZIO[R, Throwable, F[B]] =
-    ZIO.environment[R] >>> liftF(fa)(f)
+    ZIO.environment[R] >>> liftF(f)(fa)
 
   def raiseError[A](e: Throwable): Task[A] = Task.fail(e)
 
