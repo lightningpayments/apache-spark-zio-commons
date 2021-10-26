@@ -1,12 +1,5 @@
 # README
 
-## v1.0.1
-
-- added ZIO as Environment requirements to use SparkSession (ReaderT)
-- SparkR as main environment signature for contravariant custom environments
-- SparkIORunnable with spark session soft stop
-- DataFrameWriter and DataFrameReader as custom environments
-
 ## minimal requirements
 
 ### application.conf
