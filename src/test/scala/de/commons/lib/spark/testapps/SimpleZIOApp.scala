@@ -1,7 +1,6 @@
 package de.commons.lib.spark.testapps
 
-import de.commons.lib.spark
-import de.commons.lib.spark.SparkIO
+import de.commons.lib.spark.SparkRunnable.SparkRZIO
 import de.commons.lib.spark.environments.SparkR._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions._
@@ -26,7 +25,7 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
   }
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    SparkIO[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show))
+    new SparkRZIO[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show))
       .run
       .provide(new SparkEnvironment(configuration, logger) with RandomNumberEnv)
       .exitCode
