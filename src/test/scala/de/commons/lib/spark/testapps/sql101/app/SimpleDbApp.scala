@@ -1,6 +1,6 @@
 package de.commons.lib.spark.testapps.sql101.app
 
-import de.commons.lib.spark.SparkIO
+import de.commons.lib.spark.SparkRunnable.SparkRZIO
 import de.commons.lib.spark.environments.SparkR.SparkEnvironment
 import de.commons.lib.spark.environments.io.{SparkDataFrameWriter, SparkDbDataFrameReader}
 import de.commons.lib.spark.testapps.sql101.app.logic.services.DbService
@@ -42,7 +42,7 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
   private val dbService = new DbService(url, properties)
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    SparkIO[SparkEnvironment, R, Unit](program1 >>= program2)
+    new SparkRZIO[SparkEnvironment, R, Unit](program1 >>= program2)
       .run
       .provide(new SparkEnvironment(configuration, logger) with SparkDbDataFrameReader with SparkDataFrameWriter)
       .exitCode
