@@ -59,9 +59,13 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
   private val program2: DataFrame => ZIO[SparkEnvironment with R, Throwable, Unit] = df => {
     import df.sparkSession.implicits._
     val takeRandomAgentCode = udf((_: String) => UUID.randomUUID().toString.take(5))
+    val agentCode: String = "agentCode"
 
     for {
-      agents0 <- Task(df.withColumn(colName = "agentCode", takeRandomAgentCode(col(colName = "agentCode"))).as[Agent])
+      agents0 <- Task(
+        df.withColumn(colName = agentCode, takeRandomAgentCode(col(colName = agentCode)))
+          .as[Agent]
+          .sort(sortCol = agentCode))
       _       <- dbService.insertAgents(agents0)
       agents1 <- dbService.getAgents
     } yield agents1.show()

@@ -35,10 +35,10 @@ class SparkEnvironmentSpec extends TestSpec with SparkTestSupport {
 
       runtime.unsafeRun(program) mustBe 1
     }
-    "liftF" in {
+    "lift" in {
       def f(a: String)(spark: SparkSession, logger: Logger): Int = 1
       val env = new SparkEnvironment(configuration, logger)
-      val program: Task[Int] = env.liftF(f)(Task("foo")).flatten
+      val program: Task[Int] = env.lift(f)(Task("foo")).flatten
 
       whenReady(program)(_ mustBe Right(1))
     }

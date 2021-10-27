@@ -12,53 +12,54 @@ import zio.{URIO, ZIO}
 
 private[sql101] final class DbService(url: String, properties: java.util.Properties) {
 
-  def getAgents: ZIO[SparkEnvironment with SparkDbDataFrameReader, Throwable, DataFrame] =
+  private type ReaderR = SparkEnvironment with SparkDbDataFrameReader
+  private type WriterR = SparkEnvironment with SparkDataFrameWriter
+
+  private val readerIO: ZIO[ReaderR, Throwable, SqlQuery => DataFrame] =
     for {
-      env <- ZIO.environment[SparkEnvironment with SparkDbDataFrameReader]
+      env   <- ZIO.environment[ReaderR]
+      spark <- env.sparkM
+    } yield env.reader(spark)(url, properties)(_)
+
+  private val writerIO: URIO[WriterR, DataFrameWriter] =
+    ZIO.environment[WriterR].map(_.insert(url, properties))
+
+  def getAgents: ZIO[ReaderR, Throwable, DataFrame] =
+    for {
+      env <- ZIO.environment[ReaderR]
       _   <- env.loggerM.map(_.debug("select all agents"))
-      df  <- readerM.map(Agent.select).map { ds =>
+      df  <- readerIO.map(Agent.select).map { ds =>
         import ds.sparkSession.implicits._
         ds.withColumn("country", when($"country".isNull, lit("null")))
       }
     } yield df
 
-  def insertAgents(ds: Dataset[Agent]): ZIO[SparkEnvironment with SparkDataFrameWriter, Throwable, Dataset[Agent]] =
+  def insertAgents(ds: Dataset[Agent]): ZIO[WriterR, Throwable, Dataset[Agent]] =
     for {
-      env <- ZIO.environment[SparkEnvironment with SparkDataFrameWriter]
+      env <- ZIO.environment[WriterR]
       _   <- env.loggerM.map(_.debug("insert agents"))
-      _   <- writerM.map(Agent.insert(ds))
+      _   <- writerIO.map(Agent.insert(ds))
     } yield ds
 
-  def getCustomers: ZIO[SparkEnvironment with SparkDbDataFrameReader, Throwable, Dataset[Customer]] = {
+  def getCustomers: ZIO[ReaderR, Throwable, Dataset[Customer]] =
     for {
-      env <- ZIO.environment[SparkEnvironment with SparkDbDataFrameReader]
+      env <- ZIO.environment[ReaderR]
       _   <- env.loggerM.map(_.debug("select all customers"))
-      ds  <- readerM.map(Customer.select)
+      ds  <- readerIO.map(Customer.select)
     } yield ds
-  }
 
-  def getOrders: ZIO[SparkEnvironment with SparkDbDataFrameReader, Throwable, Dataset[Order]] =
+  def getOrders: ZIO[ReaderR, Throwable, Dataset[Order]] =
     for {
-      env <- ZIO.environment[SparkEnvironment with SparkDbDataFrameReader]
+      env <- ZIO.environment[ReaderR]
       _   <- env.loggerM.map(_.debug("select all orders"))
-      ds  <- readerM.map(Order.select)
+      ds  <- readerIO.map(Order.select)
     } yield ds
 
-  def getAgentsStatistics:
-  ZIO[SparkEnvironment with SparkDbDataFrameReader, Throwable, Dataset[JoinedAgentsOrdersCustomers]] =
+  def getAgentsStatistics: ZIO[ReaderR, Throwable, Dataset[JoinedAgentsOrdersCustomers]] =
     for {
-      env <- ZIO.environment[SparkEnvironment with SparkDbDataFrameReader]
+      env <- ZIO.environment[ReaderR]
       _   <- env.loggerM.map(_.debug("join agents via order via customers"))
-      ds  <- readerM.map(JoinedAgentsOrdersCustomers.select)
+      ds  <- readerIO.map(JoinedAgentsOrdersCustomers.select)
     } yield ds
-
-  private val readerM: ZIO[SparkEnvironment with SparkDbDataFrameReader, Throwable, SqlQuery => DataFrame] =
-    for {
-      env    <- ZIO.environment[SparkEnvironment with SparkDbDataFrameReader]
-      spark  <- env.sparkM
-    } yield env.reader(spark)(url, properties)(_)
-
-  private val writerM: URIO[SparkEnvironment with SparkDataFrameWriter, DataFrameWriter] =
-    ZIO.environment[SparkEnvironment with SparkDataFrameWriter].map(_.insert(url, properties))
 
 }

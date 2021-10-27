@@ -5,7 +5,7 @@ import play.api.Configuration
 
 import scala.language.higherKinds
 
-trait SparkR extends Functions
+trait SparkR extends SparkRFunctions
 
 object SparkR {
   class SparkEnvironment(override val configuration: Configuration, override val logger: Logger) extends SparkR
