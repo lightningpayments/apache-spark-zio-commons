@@ -2,7 +2,7 @@ package de.commons.lib.spark.testapps.sql101.app.logic.services
 
 import de.commons.lib.spark.environments.SparkR.SparkEnvironment
 import de.commons.lib.spark.environments.io.SparkDataFrameWriter.DataFrameWriter
-import de.commons.lib.spark.environments.io.{SparkDbDataFrameReader, SparkDataFrameWriter}
+import de.commons.lib.spark.environments.io.{SparkDataFrameWriter, SparkDbDataFrameReader}
 import de.commons.lib.spark.models.SqlQuery
 import de.commons.lib.spark.testapps.sql101.app.logic.joins.JoinedAgentsOrdersCustomers
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.{Agent, Customer, Order}
@@ -26,40 +26,26 @@ private[sql101] final class DbService(url: String, properties: java.util.Propert
 
   def getAgents: ZIO[ReaderR, Throwable, DataFrame] =
     for {
-      env <- ZIO.environment[ReaderR]
-      _   <- env.loggerM.map(_.debug("select all agents"))
-      df  <- readerIO.map(Agent.select).map { ds =>
+      _  <- ZIO.environment[ReaderR].map(_.loggerM.map(_.debug("select all agents")))
+      df <- readerIO.map(Agent.select).map { ds =>
         import ds.sparkSession.implicits._
         ds.withColumn("country", when($"country".isNull, lit("null")))
       }
     } yield df
 
   def insertAgents(ds: Dataset[Agent]): ZIO[WriterR, Throwable, Dataset[Agent]] =
-    for {
-      env <- ZIO.environment[WriterR]
-      _   <- env.loggerM.map(_.debug("insert agents"))
-      _   <- writerIO.map(Agent.insert(ds))
-    } yield ds
+    ZIO.environment[WriterR].map(_.loggerM.map(_.debug("insert agents"))) *>
+    writerIO.map(Agent.insert(ds)) *>
+    ZIO(ds)
 
   def getCustomers: ZIO[ReaderR, Throwable, Dataset[Customer]] =
-    for {
-      env <- ZIO.environment[ReaderR]
-      _   <- env.loggerM.map(_.debug("select all customers"))
-      ds  <- readerIO.map(Customer.select)
-    } yield ds
+    ZIO.environment[ReaderR].map(_.loggerM.map(_.debug("select all customers"))) *> readerIO.map(Customer.select)
 
   def getOrders: ZIO[ReaderR, Throwable, Dataset[Order]] =
-    for {
-      env <- ZIO.environment[ReaderR]
-      _   <- env.loggerM.map(_.debug("select all orders"))
-      ds  <- readerIO.map(Order.select)
-    } yield ds
+    ZIO.environment[ReaderR].map(_.loggerM.map(_.debug("select all orders"))) *> readerIO.map(Order.select)
 
   def getAgentsStatistics: ZIO[ReaderR, Throwable, Dataset[JoinedAgentsOrdersCustomers]] =
-    for {
-      env <- ZIO.environment[ReaderR]
-      _   <- env.loggerM.map(_.debug("join agents via order via customers"))
-      ds  <- readerIO.map(JoinedAgentsOrdersCustomers.select)
-    } yield ds
+    ZIO.environment[ReaderR].map(_.loggerM.map(_.debug("join agents via order via customers"))) *>
+    readerIO.map(JoinedAgentsOrdersCustomers.select)
 
 }
