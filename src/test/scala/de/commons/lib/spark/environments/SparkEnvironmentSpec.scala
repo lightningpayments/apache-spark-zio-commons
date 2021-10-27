@@ -22,43 +22,42 @@ class SparkEnvironmentSpec extends TestSpec with SparkTestSupport {
     }
     "apply" in {
       val env = new SparkEnvironment(configuration, logger)
-      val f: (SparkSession, Logger) => Int = { case (_, _) => 1 }
+      def f(spark: SparkSession, logger: Logger): Int = 1
+
       whenReady(env.apply(f))(_ mustBe Right(1))
     }
     "applyR" in {
       val env = new SparkEnvironment(configuration, logger)
-      val f: (SparkSession, Logger) => Int = { case (_, _) => 1 }
+      def f(spark: SparkSession, logger: Logger): Int = 1
+      val program = env
+        .applyR(ZIO.environment[ZEnv] >>> Task[(SparkSession, Logger) => Int](f))
+        .provideCustomLayer(ZEnv.live)
 
-      val program = env.applyR(ZIO.environment[ZEnv] >>> Task(f)).provideCustomLayer(ZEnv.live)
       runtime.unsafeRun(program) mustBe 1
     }
-    "liftF" in {
-      val f: String => (SparkSession, Logger) => Int = {
-        _ => {
-          case (_, _) => 1
-        }
-      }
+    "lift" in {
+      def f(a: String)(spark: SparkSession, logger: Logger): Int = 1
       val env = new SparkEnvironment(configuration, logger)
-      val program: Task[Int] = env.liftF(Task("foo"))(f).flatten
+      val program: Task[Int] = env.lift(f)(Task("foo")).flatten
+
       whenReady(program)(_ mustBe Right(1))
     }
     "liftR" in {
-      val f: Int => (SparkSession, Logger) => Int = {
-        _ => {
-          case (_, _) => 1
-        }
-      }
+      def f(a: Int)(spark: SparkSession, logger: Logger): Int = 1
       val env = new SparkEnvironment(configuration, logger)
-      val program = env.liftR(Task(1))(f).flatten
+      val program = env.liftR(f)(Task(1)).flatten
+
       whenReady(program)(_ mustBe Right(1))
     }
     "raiseError" in {
       val env = new SparkEnvironment(configuration, logger)
+
       whenReady(env.raiseError[String](new Throwable))(_.isLeft mustBe true)
     }
     "raiseErrorR" in {
       val env = new SparkEnvironment(configuration, logger)
       val runtime = zio.Runtime(env, Platform.default)
+
       Try(runtime.unsafeRun(env.raiseErrorR(new Throwable))).toOption mustBe None
     }
   }

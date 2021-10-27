@@ -9,7 +9,7 @@ import zio.{ExitCode, Task, URIO, ZEnv, ZIO}
 
 private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
 
-  type R = SparkEnvironment with RandomNumberEnv
+  private type R = SparkEnvironment with RandomNumberEnv
 
   trait RandomNumberEnv {
     val randomMathGen: Task[Double] = Task(math.random())

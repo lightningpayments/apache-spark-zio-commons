@@ -17,7 +17,7 @@ object MonadControl {
   /**
    * purifies Some[_] optional value or uses a given applicative value.
    */
-  def optionLiftMOrElse[F[_]: Applicative, A](option: Option[A])(orElse: => F[A]): F[A] = option match {
+  def optionLiftMOrElseM[F[_]: Applicative, A](option: Option[A])(orElse: => F[A]): F[A] = option match {
     case Some(a) => Applicative[F].pure(a)
     case None    => orElse
   }
@@ -26,13 +26,19 @@ object MonadControl {
    * If a given optional provides Some[_] value, then the value is applied to an Applicative[_] function fa.
    * otherwise, the Applicative[_] is purely initialized with None.
    */
-  def optionLiftM[F[_]: Applicative, A, B](option: Option[A])(f: A => F[B]): F[Option[B]] = option match {
-    case Some(a) => Applicative[F].map[B, Option[B]](f(a))(Some(_))
-    case None    => Applicative[F].pure(None)
+  def optionLiftM[F[_], A, B](
+    option: Option[A])(
+    f: A => F[B])(
+    implicit A: Applicative[F]
+  ): F[Option[B]] = option match {
+    case Some(a) => A.fmap[B, Option[B]](f(a))(Some(_))
+    case None    => A.pure(None)
   }
 
   implicit class RichOption[A](option: Option[A]) {
-    def liftMOrElse[F[_]: Applicative](orElse: => F[A]): F[A] = MonadControl.optionLiftMOrElse(option)(orElse)
-    def liftM[F[_]: Applicative, B](f: A => F[B]): F[Option[B]] = MonadControl.optionLiftM(option)(f)
+    def liftMOrElseM[F[_]](orElse: => F[A])(implicit A: Applicative[F]): F[A] =
+      MonadControl.optionLiftMOrElseM(option)(orElse)
+    def liftM[F[_], B](f: A => F[B])(implicit A: Applicative[F]): F[Option[B]] =
+      MonadControl.optionLiftM(option)(f)
   }
 }

@@ -25,27 +25,27 @@ class MonadControlSpec extends TestSpec with SparkTestSupport {
     }
   }
 
-  "MonadControl#optionLiftMOrElse" must {
+  "MonadControl#optionLiftMOrElseM" must {
     "work for different kinds of Monads" in {
-      MonadControl.optionLiftMOrElse[List, Int](Some(2))(List(3, 1)) mustBe List(2)
-      MonadControl.optionLiftMOrElse[List, Int](None)(List(1, 3)) mustBe List(1, 3)
-      MonadControl.optionLiftMOrElse[Option, Int](Some(1))(Some(2)) mustBe Some(1)
-      MonadControl.optionLiftMOrElse[Option, Int](None)(Some(2)) mustBe Some(2)
+      MonadControl.optionLiftMOrElseM[List, Int](Some(2))(List(3, 1)) mustBe List(2)
+      MonadControl.optionLiftMOrElseM[List, Int](None)(List(1, 3)) mustBe List(1, 3)
+      MonadControl.optionLiftMOrElseM[Option, Int](Some(1))(Some(2)) mustBe Some(1)
+      MonadControl.optionLiftMOrElseM[Option, Int](None)(Some(2)) mustBe Some(2)
 
-      whenReady(MonadControl.optionLiftMOrElse[Task, Int](None)(Task.succeed(2)))(_ mustBe Right(2))
+      whenReady(MonadControl.optionLiftMOrElseM[Task, Int](None)(Task.succeed(2)))(_ mustBe Right(2))
     }
     "convenience: work for different kinds of Monads" in {
-      Some(2).liftMOrElse(List(3, 1)) mustBe List(2)
-      none[Int].liftMOrElse[List](List(1, 3)) mustBe List(1, 3)
+      Some(2).liftMOrElseM(List(3, 1)) mustBe List(2)
+      none[Int].liftMOrElseM[List](List(1, 3)) mustBe List(1, 3)
 
-      Some(1).liftMOrElse[Option](Some(2)) mustBe Some(1)
-      none[Int].liftMOrElse[Option](Some(2)) mustBe Some(2)
+      Some(1).liftMOrElseM[Option](Some(2)) mustBe Some(1)
+      none[Int].liftMOrElseM[Option](Some(2)) mustBe Some(2)
     }
     "work for Id" in {
-      val withValue = MonadControl.optionLiftMOrElse[Id, String](Some("foo"))("bar")
+      val withValue = MonadControl.optionLiftMOrElseM[Id, String](Some("foo"))("bar")
       withValue mustBe "foo"
 
-      val withoutValue = MonadControl.optionLiftMOrElse[Id, String](None)("bar")
+      val withoutValue = MonadControl.optionLiftMOrElseM[Id, String](None)("bar")
       withoutValue mustBe "bar"
     }
   }
