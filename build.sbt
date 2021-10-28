@@ -6,7 +6,7 @@ name := "Commons-Spark"
 organization := "de.commons"
 organizationHomepage := None
 organizationName := "Commons"
-version := "2.0.0"
+version := "2.0.1"
 
 // -------------------------------------------------------------------------------------------------
 // Application
