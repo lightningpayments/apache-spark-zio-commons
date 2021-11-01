@@ -10,13 +10,13 @@ trait SparkRunnable[-R, A] {
   def run: ZIO[R, Throwable, A]
 }
 
+/**
+ * You should use this for a smooth shutdown of the Spark session.
+ */
 object SparkRunnable {
 
-  /**
-   * You should use this for a smooth shutdown of the Spark session.
-   * R1 as customize environment derived from {{{ SparkR }}}
-   */
-  final class SparkRZIO[R1 <: SparkR, R2, A](io: ZIO[R1 with R2, Throwable, A]) extends SparkRunnable[R1 with R2, A] {
+  final case class SparkRZIO[R1 <: SparkR, R2, A](io: ZIO[R1 with R2, Throwable, A])
+    extends SparkRunnable[R1 with R2, A] {
     override def run: ZIO[R1 with R2, Throwable, A] =
       for {
         (spark, logger) <- ZIO.tupledPar(
@@ -27,7 +27,7 @@ object SparkRunnable {
       } yield a
   }
 
-  final class SparkZIO[R, A](
+  final case class SparkZIO[R, A](
       io: ZIO[R, Throwable, A])(
       implicit spark: SparkSession,
       logger: Logger
@@ -35,7 +35,7 @@ object SparkRunnable {
     override def run: ZIO[R, Throwable, A] = foldM[R, A](io)
   }
 
-  final class SparkTask[A](
+  final case class SparkTask[A](
       io: Task[A])(
       implicit spark: SparkSession,
       logger: Logger

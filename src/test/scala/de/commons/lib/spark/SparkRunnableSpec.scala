@@ -15,7 +15,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
         s <- Task.effect[String](throw t)
       } yield s
 
-      val runnable = new SparkRZIO[SparkEnvironment, Any, String](io).run
+      val runnable = SparkRZIO[SparkEnvironment, Any, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
         case Right(_) => fail()
         case Left(ex) =>
@@ -29,7 +29,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
         s <- Task.succeed("foo")
       } yield s
 
-      val runnable = new SparkRZIO[SparkEnvironment, Any, String](io).run
+      val runnable = SparkRZIO[SparkEnvironment, Any, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
     }
   }
@@ -42,7 +42,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
         s <- Task.effect[String](throw t)
       } yield s
 
-      val runnable = new SparkZIO[SparkEnvironment, String](io).run
+      val runnable = SparkZIO[SparkEnvironment, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
         case Right(_) => fail()
         case Left(ex) =>
@@ -56,7 +56,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
         s <- Task.succeed("foo")
       } yield s
 
-      val runnable = new SparkZIO[SparkEnvironment, String](io).run
+      val runnable = SparkZIO[SparkEnvironment, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
     }
   }
@@ -69,7 +69,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
         s <- Task.effect[String](throw t)
       } yield s
 
-      val runnable = new SparkZIO[SparkEnvironment, String](io).run
+      val runnable = SparkZIO[SparkEnvironment, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
         case Right(_) => fail()
         case Left(ex) =>
@@ -78,7 +78,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
       }
     }
     "return a string when successful" in withSparkSession { implicit spark => _ =>
-      val runnable = new SparkTask[String](Task.succeed("foo")).run
+      val runnable = SparkTask[String](Task.succeed("foo")).run
       whenReady(runnable)(_ mustBe Right("foo"))
     }
   }
