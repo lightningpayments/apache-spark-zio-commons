@@ -18,12 +18,13 @@ object SparkRunnable {
    */
   final class SparkRZIO[R1 <: SparkR, R2, A](io: ZIO[R1 with R2, Throwable, A]) extends SparkRunnable[R1 with R2, A] {
     override def run: ZIO[R1 with R2, Throwable, A] =
-      ZIO.tupledPar(
-        zio1 = ZIO.environment[R1 with R2].>>=(_.sparkM),
-        zio2 = ZIO.environment[R1 with R2].>>=(_.loggerM)
-      ).flatMap {
-        case (spark, logger) => foldM[R1 with R2, A](io)(implicitly[SparkSession](spark), implicitly[Logger](logger))
-      }
+      for {
+        (spark, logger) <- ZIO.tupledPar(
+          zio1 = ZIO.environment[R1 with R2].>>=(_.sparkM),
+          zio2 = ZIO.environment[R1 with R2].>>=(_.loggerM)
+        )
+        a <- foldM[R1 with R2, A](io)(implicitly[SparkSession](spark), implicitly[Logger](logger))
+      } yield a
   }
 
   final class SparkZIO[R, A](

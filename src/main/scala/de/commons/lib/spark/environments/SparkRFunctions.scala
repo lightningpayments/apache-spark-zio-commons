@@ -7,7 +7,7 @@ import org.apache.spark.sql.SparkSession
 import play.api.Configuration
 import zio.{Task, ZIO}
 
-import scala.language.higherKinds
+import scala.language.{higherKinds, postfixOps}
 import scala.util.Try
 
 private[environments] trait SparkRFunctions {
@@ -25,10 +25,7 @@ private[environments] trait SparkRFunctions {
 
   val unit: Task[Unit] = Task.unit
 
-  def apply[A](f: (SparkSession, Logger) => A): Task[A] =
-    ZIO.tupledPar(sparkM, loggerM).map {
-      case (session, logger) => f(session, logger)
-    }
+  def apply[A](f: (SparkSession, Logger) => A): Task[A] = ZIO.tupledPar(sparkM, loggerM).map(f _ tupled)
 
   def applyR[R, A](ff: ZIO[R, Throwable, (SparkSession, Logger) => A]): ZIO[R, Throwable, A] =
     ZIO.tupledPar(sparkM, loggerM).flatMap {
