@@ -1,49 +1,52 @@
 # README
 
-## minimal requirements
+## install test db
 
-### application.conf
+```bash
+### Local MySql DB Deployment ###
+
+1 pen & Edit /etc/my.cnf or /etc/mysql/my.cnf, depending on your distro.
+2 Add skip-grant-tables under [mysqld]
+3 Restart Mysql
+4 You should be able to login to mysql now using the below command mysql -u root -p
+5 Run mysql> flush privileges;
+6 Set new password by ALTER USER 'root' IDENTIFIED BY 'NewPassword';
+7 Go back to /etc/my.cnf and remove/comment skip-grant-tables
+8 Restart Mysql
+9 Now you will be able to login with the new password mysql -u root -p
+
+
+docker run --name budni_dev_local_mysql -p 3306:3306 \
+-e MYSQL_ROOT_PASSWORD=password -d mysql --default-authentication-plugin=mysql_native_password
+docker exec -it <container-id> bash -l
+# see
+# https://medium.com/tech-learn-share/docker-mysql-access-denied-for-user-172-17-0-1-using-password-yes-c5eadad582d3
+```
+
+## application.conf minimal requirements
 
 ```
 spark {
-  appName = "SparkApp"
-  master = "local[*]"
-  config {}
+  appName = "SimpleDbApp"
   db {
     config {
       "driver": "com.mysql.cj.jdbc.Driver"
-      "url": "jdbc:mysql://localhost:3306/sparkdb"
-      "user": "<user>"
-      "password": "<password>"
+      "url": "jdbc:mysql://localhost:3305/sparkdb"
+      "user": "ronny"
+      "password": "password"
     }
   }
 }
 ```
 
-### minimal session load
+## Example
+
+### SparkEnvironment example with SparkDBDataFrameReader
 
 ```scala
-implicit val configuration: Configuration = Configuration.load("path/to/application.conf")
-val loader: SparkSessionLoader = new SparkSessionLoader(configuration)
-```
 
-### session load with SparkDataFrameWriter and/or SparkDBDataFrameReader
-
-```scala
-val configuration: Configuration = Configuration.load("path/to/application.conf")
-val dbConf = configuration.get[Map[String, String]]("spark.db.config")
-val url = configuration.get[String]("spark.db.config.url")
-val properties = {
-  val props = new Properties()
-  props.putAll(dbConf.asJava)
-  props
-}
-val loader: SparkSessionLoader = new SparkSessionLoader(configuration)
-```
-
-```scala
 // url and props needed for e.g.
-trait SparkDBDataFrameReader {
+trait SparkDbDataFrameReader {
   def reader(
     sparkSession: SparkSession)(
     url: String,
@@ -52,16 +55,17 @@ trait SparkDBDataFrameReader {
   ): DataFrame = sparkSession.read.jdbc(url, query.value, properties)
 }
 
-object SparkDBDataFrameReader extends SparkDBDataFrameReader {
+object SparkDbDataFrameReader extends SparkDbDataFrameReader {
   type DataFrameReader = SqlQuery => DataFrame
 }
 
-// later
+
+// usage
 def getCustomers: ZIO[SparkEnvironment with SparkDBDataFrameReader, Throwable, Dataset[Customer]] = {
   for {
     env <- ZIO.environment[SparkEnvironment with SparkDBDataFrameReader]
     _   <- env.loggerM.map(_.debug("select all customers"))
-    ds  <- readerM.map(Customer.select)
+    ds  <- readerM.map(Customer.select) // Customer class type as a table reference
   } yield ds
 }
 
