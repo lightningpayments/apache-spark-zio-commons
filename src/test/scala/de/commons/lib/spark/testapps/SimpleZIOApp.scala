@@ -11,6 +11,8 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
 
   private type R = SparkEnvironment with RandomNumberEnv
 
+  private val env = new SparkEnvironment(configuration, logger) with RandomNumberEnv
+
   trait RandomNumberEnv {
     val randomMathGen: Task[Double] = Task(math.random())
   }
@@ -25,10 +27,7 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
   }
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    new SparkRZIO[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show))
-      .run
-      .provide(new SparkEnvironment(configuration, logger) with RandomNumberEnv)
-      .exitCode
+    new SparkRZIO[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show)).run.provide(env).exitCode
 
   private val program: ZIO[R, Throwable, Dataset[Long]] =
     ZIO.accessM[R](_.sparkM.flatMap { implicit spark =>
@@ -36,10 +35,8 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
       import spark.implicits._
 
       (for {
-        a <- pi.map(ArticleId.from)
-        b <- pi.map(ArticleId.from)
-        c <- pi.map(ArticleId.from)
-        d <- Task.succeed(ArticleId(42L)).map(n => spark.createDataset(n :: Nil))
+        (a, b, c) <- ZIO.tupled(pi.map(ArticleId.from), pi.map(ArticleId.from), pi.map(ArticleId.from))
+        d         <- Task.succeed(ArticleId(42L)).map(id => spark.createDataset(id :: Nil))
       } yield a union b union c union d)
         .map(_.agg(sum(columnName = "value")).first().getLong(0) :: Nil)
         .map(spark.createDataset(_))
@@ -48,9 +45,8 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
   private val pi: ZIO[R, Throwable, RDD[Int]] =
     ZIO.accessM[R] { env =>
       for {
-        x <- env.randomMathGen
-        y <- env.randomMathGen
-        r <- env.sparkM.map(_.sparkContext.parallelize(1 to 10).filter { _ => x * x + y * y < 1 })
+        (x, y) <- ZIO.tupled(env.randomMathGen, env.randomMathGen)
+        r      <- env.sparkM.map(_.sparkContext.parallelize(1 to 10).filter { _ => x * x + y * y < 1 })
       } yield r
     }
 
