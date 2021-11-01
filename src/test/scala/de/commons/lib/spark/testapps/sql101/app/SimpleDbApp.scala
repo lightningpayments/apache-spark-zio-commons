@@ -20,7 +20,7 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
   private val dbService = new DbService(url, properties)
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    new SparkRZIO[SparkEnvironment, R, Unit](program1 >>= program2).run.provide(env).exitCode
+    SparkRZIO[SparkEnvironment, R, Unit](program1 >>= program2).run.provide(env).exitCode
 
   private val program1: ZIO[SparkEnvironment with R, Throwable, DataFrame] =
     for {

@@ -27,7 +27,7 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
   }
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    new SparkRZIO[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show)).run.provide(env).exitCode
+    SparkRZIO[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show)).run.provide(env).exitCode
 
   private val program: ZIO[R, Throwable, Dataset[Long]] =
     ZIO.accessM[R](_.sparkM.flatMap { implicit spark =>
