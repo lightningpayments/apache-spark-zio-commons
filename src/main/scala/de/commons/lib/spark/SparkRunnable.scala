@@ -15,7 +15,7 @@ trait SparkRunnable[-R, A] {
  */
 object SparkRunnable {
 
-  final case class SparkRZIO[R1 <: SparkR, R2, A](io: ZIO[R1 with R2, Throwable, A])
+  final case class SparkRZIO[-R1 <: SparkR, -R2, A](io: ZIO[R1 with R2, Throwable, A])
     extends SparkRunnable[R1 with R2, A] {
     override def run: ZIO[R1 with R2, Throwable, A] =
       for {
@@ -27,7 +27,7 @@ object SparkRunnable {
       } yield a
   }
 
-  final case class SparkZIO[R, A](
+  final case class SparkZIO[-R, A](
       io: ZIO[R, Throwable, A])(
       implicit spark: SparkSession,
       logger: Logger

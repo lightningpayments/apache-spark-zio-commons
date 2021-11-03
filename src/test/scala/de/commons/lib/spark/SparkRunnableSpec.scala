@@ -5,15 +5,28 @@ import de.commons.lib.spark.environments.SparkR.SparkEnvironment
 import de.commons.lib.spark.errors.SparkRunnableThrowable
 import zio.{Task, ZIO}
 
+import scala.util.Random
+
 class SparkRunnableSpec extends TestSpec with SparkTestSupport {
+
+  "SparkR*" must {
+    "test contravariance" in withSparkSession { implicit spark => implicit logger =>
+      trait RandomTrait[T] {
+        def random: Task[T]
+      }
+      class RandomInt extends RandomTrait[Int] {
+        override def random: Task[Int] = Task(Random.nextInt())
+      }
+
+      val runnable: SparkZIO[RandomInt, String] = SparkZIO[RandomTrait[Int], String](Task.succeed("foo"))
+      whenReady(runnable.run.provide(new RandomInt))(_ mustBe Right("foo"))
+    }
+  }
 
   "SparkRZIO#run" must {
     "throws an error" in {
       val t = new Throwable
-      val io = for {
-        _ <- ZIO.environment[SparkEnvironment]
-        s <- Task.effect[String](throw t)
-      } yield s
+      val io = ZIO.environment[SparkEnvironment] *> Task.effect[String](throw t)
 
       val runnable = SparkRZIO[SparkEnvironment, Any, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
@@ -24,10 +37,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
       }
     }
     "return a string when successful" in {
-      val io = for {
-        _ <- ZIO.environment[SparkEnvironment]
-        s <- Task.succeed("foo")
-      } yield s
+      val io = ZIO.environment[SparkEnvironment] *> Task.succeed("foo")
 
       val runnable = SparkRZIO[SparkEnvironment, Any, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
@@ -37,10 +47,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
   "SparkZIO#run" must {
     "throws an error" in withSparkSession { implicit spark => _ =>
       val t = new Throwable
-      val io = for {
-        _ <- ZIO.environment[SparkEnvironment]
-        s <- Task.effect[String](throw t)
-      } yield s
+      val io = ZIO.environment[SparkEnvironment] *> Task.effect[String](throw t)
 
       val runnable = SparkZIO[SparkEnvironment, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
@@ -51,10 +58,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
       }
     }
     "return a string when successful" in withSparkSession { implicit spark => _ =>
-      val io = for {
-        _ <- ZIO.environment[SparkEnvironment]
-        s <- Task.succeed("foo")
-      } yield s
+      val io = ZIO.environment[SparkEnvironment] *> Task.succeed("foo")
 
       val runnable = SparkZIO[SparkEnvironment, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
@@ -64,10 +68,7 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
   "SparkTask#run" must {
     "throws an error" in withSparkSession { implicit spark => _ =>
       val t = new Throwable
-      val io = for {
-        _ <- ZIO.environment[SparkEnvironment]
-        s <- Task.effect[String](throw t)
-      } yield s
+      val io = ZIO.environment[SparkEnvironment] *> Task.effect[String](throw t)
 
       val runnable = SparkZIO[SparkEnvironment, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
