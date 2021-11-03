@@ -44,14 +44,14 @@ object SparkRunnable {
   }
 
   private def foldM[R, A](
-    io: ZIO[R, Throwable, A])(
+    io: => ZIO[R, Throwable, A])(
     implicit spark: SparkSession,
     logger: Logger
   ): ZIO[R, Throwable, A] = io.foldM(
-    failure = throwable => Task(spark.stop()) >>> Task.fail(throwable),
-    success = a         => Task(spark.stop()) >>> Task.succeed(a)
-  ).catchAll { throwable =>
-    Task(logger.error(throwable.getMessage)) >>> Task.fail(SparkRunnableThrowable(throwable))
+    failure = ex => Task(spark.stop()) >>> Task.fail(ex),
+    success = a  => Task(spark.stop()) >>> Task.succeed(a)
+  ).catchAll { ex =>
+    Task(logger.error(ex.getMessage)) >>> Task.fail(SparkRunnableThrowable(ex))
   }
 
 }

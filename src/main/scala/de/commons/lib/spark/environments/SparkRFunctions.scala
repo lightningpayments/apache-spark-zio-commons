@@ -27,7 +27,7 @@ private[environments] trait SparkRFunctions {
 
   def apply[A](f: (SparkSession, Logger) => A): Task[A] = ZIO.tupledPar(sparkM, loggerM).map(f tupled)
 
-  def applyR[R, A](ff: ZIO[R, Throwable, (SparkSession, Logger) => A]): ZIO[R, Throwable, A] =
+  def applyR[R, A](ff: => ZIO[R, Throwable, (SparkSession, Logger) => A]): ZIO[R, Throwable, A] =
     ZIO.tupledPar(sparkM, loggerM).flatMap {
       case (session, logger) => ff.map(_(session, logger))
     }
