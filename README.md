@@ -11,8 +11,7 @@ docker run --name budni_dev_local_mysql -p 3306:3306 \
   -e MYSQL_ROOT_PASSWORD=password -d mysql --default-authentication-plugin=mysql_native_password
 docker exec -it <container-id> bash -l
 
-### Local MySql DB Deployment ###
-
+### configure Maria/MySqlDB Deployment ###
 # 1 pen & Edit /etc/my.cnf or /etc/mysql/my.cnf, depending on your distro.
 # 2 Add skip-grant-tables under [mysqld]
 # 3 Restart Mysql
