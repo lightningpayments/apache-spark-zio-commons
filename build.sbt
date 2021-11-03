@@ -3,10 +3,10 @@
 // Package configuration
 // -------------------------------------------------------------------------------------------------
 name := "Commons-Spark"
-organization := "de.commons"
-organizationHomepage := None
-organizationName := "Commons"
-version := "2.0.2"
+organization := "de.lightningpayments"
+organizationHomepage := Option(url("https://www.lightning-payments.de"))
+organizationName := "lightningpayments"
+version := "3.0.0"
 
 // -------------------------------------------------------------------------------------------------
 // Application
