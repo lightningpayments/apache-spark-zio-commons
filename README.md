@@ -1,5 +1,7 @@
 # README
 
+- recommended java version: openjdk8
+
 ## install test db
 
 ```bash
