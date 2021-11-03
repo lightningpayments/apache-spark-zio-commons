@@ -9,6 +9,20 @@ import scala.util.Random
 
 class SparkRunnableSpec extends TestSpec with SparkTestSupport {
 
+  "SparkR*" must {
+    "test contravariance" in withSparkSession { implicit spark => implicit logger =>
+      trait RandomTrait[T] {
+        def random: Task[T]
+      }
+      class RandomInt extends RandomTrait[Int] {
+        override def random: Task[Int] = Task(Random.nextInt())
+      }
+
+      val runnable: SparkZIO[RandomInt, String] = SparkZIO[RandomTrait[Int], String](Task.succeed("foo"))
+      whenReady(runnable.run.provide(new RandomInt))(_ mustBe Right("foo"))
+    }
+  }
+
   "SparkRZIO#run" must {
     "throws an error" in {
       val t = new Throwable
@@ -27,17 +41,6 @@ class SparkRunnableSpec extends TestSpec with SparkTestSupport {
 
       val runnable = SparkRZIO[SparkEnvironment, Any, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
-    }
-    "return a string -- contravariant case" in withSparkSession { implicit spark => implicit logger =>
-      trait RandomTrait[T] {
-        def random: Task[T]
-      }
-      class RandomInt extends RandomTrait[Int] {
-        override def random: Task[Int] = Task(Random.nextInt())
-      }
-
-      val runnable: SparkZIO[RandomInt, String] = SparkZIO[RandomTrait[Int], String](Task.succeed("foo"))
-      whenReady(runnable.run.provide(new RandomInt))(_ mustBe Right("foo"))
     }
   }
 
