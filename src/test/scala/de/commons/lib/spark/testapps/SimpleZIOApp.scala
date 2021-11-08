@@ -2,9 +2,6 @@ package de.commons.lib.spark.testapps
 
 import de.commons.lib.spark.SparkRunnable.SparkRZIO
 import de.commons.lib.spark.environments.SparkR._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Dataset, Encoder, Encoders, SparkSession}
 import zio.{ExitCode, Task, URIO, ZEnv, ZIO}
 
 private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
@@ -17,37 +14,28 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
     val randomMathGen: Task[Double] = Task(math.random())
   }
 
-  private final case class ArticleId(value: Long) extends AnyVal
-  private object ArticleId {
-    implicit val encoders: Encoder[ArticleId] = Encoders.product[ArticleId]
-    def from(rdd: RDD[Int])(implicit spark: SparkSession): Dataset[ArticleId] = {
-      import spark.implicits._
-      rdd.toDS.as[ArticleId]
-    }
-  }
+  private final case class Pi(value: Double) extends AnyVal
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    SparkRZIO[SparkEnvironment, RandomNumberEnv, Unit](io = program.map(_.show)).run.provide(env).exitCode
+    SparkRZIO[SparkEnvironment, RandomNumberEnv, Unit](io = program).run.provide(env).exitCode
 
-  private val program: ZIO[R, Throwable, Dataset[Long]] =
-    ZIO.accessM[R](_.sparkM.flatMap { implicit spark =>
-      import ArticleId._
-      import spark.implicits._
-
-      (for {
-        (a, b, c) <- ZIO.tupled(pi.map(ArticleId.from), pi.map(ArticleId.from), pi.map(ArticleId.from))
-        d         <- Task.succeed(ArticleId(42L)).map(id => spark.createDataset(id :: Nil))
-      } yield a union b union c union d)
-        .map(_.agg(sum(columnName = "value")).first().getLong(0) :: Nil)
-        .map(spark.createDataset(_))
-    })
-
-  private val pi: ZIO[R, Throwable, RDD[Int]] =
-    ZIO.accessM[R] { env =>
-      for {
-        (x, y) <- ZIO.tupled(env.randomMathGen, env.randomMathGen)
-        r      <- env.sparkM.map(_.sparkContext.parallelize(1 to 10).filter { _ => x * x + y * y < 1 })
-      } yield r
+  // scalastyle:off
+  private val program: ZIO[R, Throwable, Unit] =
+    ZIO.accessM[R](_ => ZIO.tupled(pi, pi, pi)).map {
+      case (pi1, pi2, pi3) => println(s"$pi1 $pi2 $pi3")
     }
+  // scalastyle:on
+
+  private val pi: ZIO[R, Throwable, Pi] =
+    for {
+      spark      <- env.sparkM
+      predicates  = spark.sparkContext.parallelize(1 to 100).toLocalIterator.toList.map { _ =>
+        for {
+          (x, y)    <- ZIO.tupled(env.randomMathGen, env.randomMathGen)
+          predicate  = x * x + y * y < 1
+        } yield predicate
+      }
+      sequenced  <- ZIO.collectAll(predicates)
+    } yield Pi(4.0 * sequenced.count(identity) / 100.0)
 
 }
