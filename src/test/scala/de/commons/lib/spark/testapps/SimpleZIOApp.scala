@@ -30,12 +30,13 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
     for {
       spark      <- env.sparkM
       predicates  = spark.sparkContext.parallelize(1 to 100).toLocalIterator.toList.map { _ =>
-        for {
-          (x, y)    <- ZIO.tupled(env.randomMathGen, env.randomMathGen)
-          predicate  = x * x + y * y < 1
-        } yield predicate
+        ZIO.tupled(env.randomMathGen, env.randomMathGen).map {
+          case (x, y) =>
+            x * x + y * y < 1
+        }
       }
       sequenced  <- ZIO.collectAll(predicates)
-    } yield Pi(4.0 * sequenced.count(identity) / 100.0)
+      pi          = Pi(4.0 * sequenced.count(identity) / 100.0)
+    } yield pi
 
 }

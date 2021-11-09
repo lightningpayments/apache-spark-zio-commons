@@ -2,7 +2,7 @@ package de.commons.lib.spark.testapps.sql101.app
 
 import com.typesafe.config.ConfigFactory
 import de.commons.lib.spark.SparkSessionLoader
-import org.apache.log4j.{Logger => Log4jLogger}
+import org.apache.log4j.{Level, Logger => Log4jLogger}
 import play.api.Configuration
 
 import java.util.Properties

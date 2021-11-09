@@ -21,7 +21,8 @@ private[sql101] final case class Customer(
 )
 
 object Customer {
-  private implicit val encoders: Encoder[Customer] = Encoders.product[Customer]
+
+  implicit val encoders: Encoder[Customer] = Encoders.product[Customer]
 
   private val query: SqlQuery = SqlQuery(
     """
