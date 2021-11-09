@@ -15,15 +15,15 @@ trait SparkRunnable[-R, A] {
  */
 object SparkRunnable {
 
-  final case class SparkRZIO[-R1 <: SparkR, -R2, A](io: ZIO[R1 with R2, Throwable, A])
-    extends SparkRunnable[R1 with R2, A] {
-    override def run: ZIO[R1 with R2, Throwable, A] =
+  final case class SparkRZIO[-SR <: SparkR, -R, A](io: ZIO[SR with R, Throwable, A])
+    extends SparkRunnable[SR with R, A] {
+    override def run: ZIO[SR with R, Throwable, A] =
       for {
         (spark, logger) <- ZIO.tupledPar(
-          zio1 = ZIO.environment[R1 with R2].>>=(_.sparkM),
-          zio2 = ZIO.environment[R1 with R2].>>=(_.loggerM)
+          zio1 = ZIO.environment[SR with R].>>=(_.sparkM),
+          zio2 = ZIO.environment[SR with R].>>=(_.loggerM)
         )
-        a <- foldM[R1 with R2, A](io)(implicitly[SparkSession](spark), implicitly[Logger](logger))
+        a <- foldM[SR with R, A](io)(implicitly[SparkSession](spark), implicitly[Logger](logger))
       } yield a
   }
 
