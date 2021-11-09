@@ -19,7 +19,7 @@ private[sql101] final case class Order(
 
 object Order {
 
-  private implicit val encoders: Encoder[Order] = Encoders.product[Order]
+  implicit val encoders: Encoder[Order] = Encoders.product[Order]
 
   private val query: SqlQuery = SqlQuery(
     """

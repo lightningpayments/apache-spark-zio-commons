@@ -16,7 +16,7 @@ private[sql101] final case class Agent(
 
 object Agent {
 
-  private implicit val encoders: Encoder[Agent] = Encoders.product[Agent]
+  implicit val encoders: Encoder[Agent] = Encoders.product[Agent]
 
   private val query: SqlQuery =
     SqlQuery("(SELECT agent_code, agent_name, working_area, commission, phone_no, country FROM agents) as agents")
