@@ -17,15 +17,15 @@ class SparkDbDataFrameReaderSpec extends TestSpec with SparkTestSupport with Moc
       val createTable = "create table if not exists sparkIODbDataFrameReader (id int)"
       val insert = "INSERT INTO `sparkIODbDataFrameReader` values (1)"
 
-      val program = ZIO.environment[SparkDbDataFrameReader].map {
+      val program = ZIO.environment[SparkDataFrameReader].map {
         _
-          .reader(spark)(url, properties)(SqlQuery("(SELECT * FROM sparkIODbDataFrameReader) as q1"))
+          .sqlReader(spark)(url, properties)(SqlQuery("(SELECT * FROM sparkIODbDataFrameReader) as q1"))
           .as[Dummy]
           .count()
       }
 
       mockDb(url, dbConf)(createTable, insert) {
-        whenReady(program.provide(SparkDbDataFrameReader))(_ mustBe Right(1))
+        whenReady(program.provide(SparkDataFrameReader))(_ mustBe Right(1))
       }
     }
   }

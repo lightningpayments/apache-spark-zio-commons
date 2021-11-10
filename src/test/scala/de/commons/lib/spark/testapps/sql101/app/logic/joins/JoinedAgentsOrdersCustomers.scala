@@ -1,6 +1,6 @@
 package de.commons.lib.spark.testapps.sql101.app.logic.joins
 
-import de.commons.lib.spark.environments.io.SparkDbDataFrameReader.DataFrameReader
+import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameQueryReader
 import de.commons.lib.spark.models.SqlQuery
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.FloatType
@@ -38,7 +38,7 @@ object JoinedAgentsOrdersCustomers {
         |) as joined_agents_orders_company
         |""".stripMargin)
 
-  def select(reader: DataFrameReader): Dataset[JoinedAgentsOrdersCustomers] = {
+  def select(reader: DataFrameQueryReader): Dataset[JoinedAgentsOrdersCustomers] = {
     val df = reader(query)
     import df.sparkSession.implicits._
     df.select(cols =

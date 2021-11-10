@@ -2,7 +2,7 @@ package de.commons.lib.spark.testapps.sql101.app
 
 import de.commons.lib.spark.SparkRunnable.SparkRZIO
 import de.commons.lib.spark.environments.SparkR.SparkEnvironment
-import de.commons.lib.spark.environments.io.{SparkDataFrameWriter, SparkDbDataFrameReader}
+import de.commons.lib.spark.environments.io.{SparkDataFrameWriter, SparkDataFrameReader}
 import de.commons.lib.spark.testapps.sql101.app.logic.services.DbService
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent.encoders
@@ -15,8 +15,8 @@ import scala.language.postfixOps
 
 private[testapps] object SimpleDbApp extends zio.App with AppConfig {
 
-  private type R = SparkDbDataFrameReader with SparkDataFrameWriter
-  private val env = new SparkEnvironment(configuration, logger) with SparkDbDataFrameReader with SparkDataFrameWriter
+  private type R = SparkDataFrameReader with SparkDataFrameWriter
+  private val env = new SparkEnvironment(configuration, logger) with SparkDataFrameReader with SparkDataFrameWriter
   private val dbService = new DbService(url, properties)
 
   private val programInsertAgents: Dataset[Agent] => ZIO[SparkEnvironment with R, Throwable, Unit] = ds => {
