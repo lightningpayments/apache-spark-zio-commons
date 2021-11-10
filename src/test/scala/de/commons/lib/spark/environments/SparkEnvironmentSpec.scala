@@ -1,7 +1,7 @@
 package de.commons.lib.spark.environments
 
 import de.commons.lib.spark.environments.SparkR._
-import de.commons.lib.spark.{SparkTestSupport, TestSpec}
+import de.commons.lib.spark.{SparkMySqlTestSupport, TestSpec}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
 import zio.internal.Platform
@@ -10,7 +10,7 @@ import zio.{Task, ZEnv, ZIO}
 
 import scala.util.Try
 
-class SparkEnvironmentSpec extends TestSpec with SparkTestSupport {
+class SparkEnvironmentSpec extends TestSpec with SparkMySqlTestSupport {
 
   "SparkEnvironment" must {
     "sparkM" in {

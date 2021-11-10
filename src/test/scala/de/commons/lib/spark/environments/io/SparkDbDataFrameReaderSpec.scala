@@ -5,7 +5,7 @@ import de.commons.lib.spark.models.SqlQuery
 import org.apache.spark.sql.{Encoder, Encoders}
 import zio.ZIO
 
-class SparkDbDataFrameReaderSpec extends TestSpec with SparkTestSupport with MockDbTestSupport {
+class SparkDbDataFrameReaderSpec extends TestSpec with SparkMySqlTestSupport with MockDbTestSupport {
 
   private case class Dummy(id: Int)
 

@@ -5,7 +5,7 @@ import de.commons.lib.spark.models.{SqlQuery, TableName}
 import org.apache.spark.sql.{Encoder, Encoders}
 import zio.{Task, ZIO}
 
-class SparkDataFrameWriterSpec extends TestSpec with SparkTestSupport with MockDbTestSupport {
+class SparkDataFrameWriterSpec extends TestSpec with SparkMySqlTestSupport with MockDbTestSupport {
 
   private case class Dummy(id: Int)
   private implicit val ordering: Ordering[Dummy] = (x: Dummy, y: Dummy) => x.id compare y.id

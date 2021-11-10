@@ -3,10 +3,10 @@ package de.commons.lib.spark.testapps.sql101.test.logic.tables
 import de.commons.lib.spark.environments.io.SparkDataFrameReader
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Customer
 import de.commons.lib.spark.testapps.sql101.test.CreateTablesSupport
-import de.commons.lib.spark.{MockDbTestSupport, SparkTestSupport, TestSpec}
+import de.commons.lib.spark.{MockDbTestSupport, SparkMySqlTestSupport, TestSpec}
 import zio.ZIO
 
-class CustomerSpec extends TestSpec with SparkTestSupport with MockDbTestSupport with CreateTablesSupport {
+class CustomerSpec extends TestSpec with SparkMySqlTestSupport with MockDbTestSupport with CreateTablesSupport {
 
   private val url: String = "jdbc:h2:mem:testdb;MODE=MYSQL"
   private val customer =
