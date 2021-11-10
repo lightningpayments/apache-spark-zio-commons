@@ -13,13 +13,12 @@ final class SparkSessionLoader(configuration: Configuration) {
   private val master: String =
     configuration.getOptional[String]("spark.master").getOrElse("local[*]")
 
-  private val sparkConf: Map[String, String] =
+  private val sparkConfMap: Map[String, String] =
     configuration.getOptional[Map[String, String]]("spark.config").getOrElse(Map.empty)
 
   def getSpark: SparkSession = {
-    val config  = new SparkConf().setAll(sparkConf)
-    val builder = SparkSession.builder().appName(appName).master(master).config(config)
-    val spark = builder.getOrCreate()
+    val config = new SparkConf().setAll(sparkConfMap)
+    val spark  = SparkSession.builder().appName(appName).master(master).config(config).getOrCreate()
     spark
   }
 }
