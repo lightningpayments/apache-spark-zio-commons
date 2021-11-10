@@ -16,13 +16,15 @@ trait SparkDataFrameReader {
   ): DataFrame = sparkSession.read.jdbc(url, show"$query", properties)
 
   def mongoDbReader(
-    sparkSession: SparkSession)(
+    sparkSession: SparkSession,
+    properties: Map[String, String])(
     database: DbName,
     collection: CollectionName
   ): DataFrame =
     sparkSession.read.format("com.mongodb.spark.sql.DefaultSource")
       .option("database", show"$database")
       .option("collection", show"$collection")
+      .options(properties)
       .load()
 
 }

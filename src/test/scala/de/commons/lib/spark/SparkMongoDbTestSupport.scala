@@ -20,16 +20,21 @@ trait SparkMongoDbTestSupport {
 
   private val iSockAddress: InetSocketAddress = server.bind()
 
-  private val mongoDbUrl = s"mongodb://${iSockAddress.getHostName}:${server.getLocalAddress.getPort}"
+  protected val mongoDbUrl = s"mongodb://${iSockAddress.getHostName}:${server.getLocalAddress.getPort}"
+
+  protected val properties = Map(
+    "uri" -> mongoDbUrl,
+    "partitioner" -> "MongoPaginateBySizePartitioner",
+    "partitionerOptions.partitionSizeMB" -> "64"
+  )
 
   protected implicit val configuration: Configuration = Configuration(ConfigFactory.parseString(
     s"""
       |spark {
-      |  config {}
       |  config {
-      |    "spark.mongodb.input.uri": "$mongoDbUrl"
-      |    "spark.mongodb.output.uri": "$mongoDbUrl"
-      |    "spark.mongodb.input.partitioner": "MongoPaginateBySizePartitioner"
+      |    "spark.mongodb.input.uri": "$mongoDbUrl",
+      |    "spark.mongodb.output.uri": "$mongoDbUrl",
+      |    "spark.mongodb.input.partitioner": "MongoPaginateBySizePartitioner",
       |    "spark.mongodb.input.partitionerOptions.partitionSizeMB": "64"
       |  }
       |}
@@ -39,7 +44,7 @@ trait SparkMongoDbTestSupport {
   protected val master: String = "local[*]"
   protected val sparkConf: Map[String, String] = configuration.get[Map[String, String]]("spark.config")
 
-  private lazy val spark: SparkSession = {
+  private val spark: SparkSession = {
     val config = new SparkConf().setAll(sparkConf)
     val builder = SparkSession.builder().appName(appName).master(master).config(config)
     builder.getOrCreate()
@@ -48,4 +53,5 @@ trait SparkMongoDbTestSupport {
   protected val client: MongoClient = MongoClients.create(mongoDbUrl)
 
   def withSparkSession[A, T](f: SparkSession => Logger => T): T = f(spark)(logger)
+
 }

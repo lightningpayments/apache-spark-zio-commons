@@ -12,7 +12,7 @@ private[testapps] object SimpleMongoDbApp extends zio.App with AppConfig {
   private val readerIO: ZIO[SparkEnvironment with SparkDataFrameReader, Throwable, DataFrameMongoDbReader] =
     for {
       env <- ZIO.environment[SparkEnvironment with SparkDataFrameReader]
-      df  <- env.sparkM.map(env.mongoDbReader)
+      df  <- env.sparkM.map(spark => env.mongoDbReader(spark, properties)(_, _))
     } yield df
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =

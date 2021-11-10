@@ -25,13 +25,11 @@ class AgentSpec extends TestSpec with SparkMongoDbTestSupport with MockMongoDbTe
 
   "Agent#getAll" must {
     "return one agent dataset" in withSparkSession { spark => _ =>
-      mockDb(preparedDocs = docs)(dbName = "agents", collection = "agents", client = client) {
-        val program = (for {
-          env <- ZIO.environment[SparkDataFrameReader]
-          ds   = Agent.getAll(env.mongoDbReader(spark))
-        } yield ds).provide(SparkDataFrameReader)
-
-        whenReady(program)(_.map(_.collect().toList) mustBe Right(agent :: Nil))
+      mockMongoDb(preparedDocs = docs)(dbName = "agents", collection = "agents", client = client) {
+        val reader = SparkDataFrameReader.mongoDbReader(spark, properties)(_, _)
+        whenReady(ZIO(Agent.getAll(reader))) {
+          _.map(_.collect().toList) mustBe Right(agent :: Nil)
+        }
       }
     }
   }
