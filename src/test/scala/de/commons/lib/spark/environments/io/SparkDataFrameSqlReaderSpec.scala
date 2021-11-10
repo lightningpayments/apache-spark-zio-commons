@@ -5,21 +5,20 @@ import de.commons.lib.spark.models.SqlQuery
 import org.apache.spark.sql.{Encoder, Encoders}
 import zio.ZIO
 
-class SparkDbDataFrameReaderSpec extends TestSpec with SparkMySqlTestSupport with MockDbTestSupport {
+class SparkDataFrameSqlReaderSpec extends TestSpec with SparkMySqlTestSupport with MockDbTestSupport {
 
   private case class Dummy(id: Int)
-
   private implicit val encoders: Encoder[Dummy] = Encoders.product[Dummy]
 
-  "SparkIODbDataFrameReader#apply" must {
-    "return 1" in withSparkSession { spark => logger =>
+  "SparkDataFrameReader#apply" must {
+    "return 1" in withSparkSession { spark => _ =>
       val url = "jdbc:h2:mem:testdb;MODE=MYSQL"
-      val createTable = "create table if not exists sparkIODbDataFrameReader (id int)"
-      val insert = "INSERT INTO `sparkIODbDataFrameReader` values (1)"
+      val createTable = "create table if not exists sparkDataFrameReader (id int)"
+      val insert = "INSERT INTO `sparkDataFrameReader` values (1)"
 
       val program = ZIO.environment[SparkDataFrameReader].map {
         _
-          .sqlReader(spark)(url, properties)(SqlQuery("(SELECT * FROM sparkIODbDataFrameReader) as q1"))
+          .sqlReader(spark)(url, properties)(SqlQuery("(SELECT * FROM sparkDataFrameReader) as q1"))
           .as[Dummy]
           .count()
       }
