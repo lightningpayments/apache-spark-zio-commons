@@ -1,6 +1,6 @@
 package de.commons.lib.spark.testapps.sql101.app.logic.tables
 
-import de.commons.lib.spark.environments.io.SparkDbDataFrameReader.DataFrameReader
+import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameQueryReader
 import de.commons.lib.spark.models.SqlQuery
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.FloatType
@@ -37,7 +37,7 @@ object Customer {
       |""".stripMargin
   )
 
-  def select(reader: DataFrameReader): Dataset[Customer] = {
+  def select(reader: DataFrameQueryReader): Dataset[Customer] = {
     val df = reader(query)
     import df.sparkSession.implicits._
     df.select(cols =

@@ -7,7 +7,7 @@ import zio.Task
 import zio.interop.catz._
 import MonadControl._
 
-class MonadControlSpec extends TestSpec with SparkTestSupport {
+class MonadControlSpec extends TestSpec with SparkMySqlTestSupport {
 
   "MonadControl#foldM" must {
     "work for different kinds of Monads" in {

@@ -7,7 +7,7 @@ import zio.{Task, ZIO}
 
 import scala.util.Random
 
-class SparkRunnableSpec extends TestSpec with SparkTestSupport {
+class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
 
   "SparkR*" must {
     "test contravariance" in withSparkSession { implicit spark => implicit logger =>
