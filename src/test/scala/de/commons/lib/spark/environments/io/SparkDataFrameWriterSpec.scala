@@ -16,39 +16,34 @@ class SparkDataFrameWriterSpec extends TestSpec with SparkMySqlTestSupport with 
 
   "SparkDbDataFrameWriter#insert" must {
     "return unit" in withSparkSession { spark => _ =>
-      val program = ZIO.environment[SparkDataFrameWriter].flatMap { writer =>
-        import spark.implicits._
-
-        for {
-          df <- Task((Dummy(1) :: Dummy(2) :: Nil).toDF())
-          _  <- Task(writer.insert(url, properties)(df, TableName("sparkDbDataFrameWriter")))
-        } yield ()
-      }
+      import spark.implicits._
+      val program = for {
+        df     <- Task((Dummy(1) :: Dummy(2) :: Nil).toDF())
+        writer <- Task(SparkDataFrameWriter.DatabaseInsert(url, properties)(TableName("sparkDbDataFrameWriter")))
+        _      <- Task(writer.run(df))
+      } yield ()
 
       mockDb(url = url, dbConfig = dbConf)(query = query) {
-        whenReady(program.provide(SparkDataFrameWriter))(_ mustBe Right(()))
+        whenReady(program)(_ mustBe Right(()))
       }
     }
   }
 
   "SparkDbDataFrameWriter#update" must {
-    "return unit" in withSparkSession { spark => _ =>
-      val program = ZIO.environment[SparkDataFrameWriter with SparkDataFrameReader].flatMap { env =>
-        import spark.implicits._
-
-        for {
-          df <- Task((Dummy(1) :: Dummy(2) :: Nil).toDF())
-
-          _  <- Task(env.insert(url, properties)(df, TableName("sparkDbDataFrameWriter")))
-          _  <- Task(env.update(url, properties)(df, TableName("sparkDbDataFrameWriter")))
-
-          q   = SqlQuery("(SELECT * FROM sparkDbDataFrameWriter) as q1")
-          ds  = env.sqlReader(spark)(url, properties)(q).as[Dummy]
-        } yield ds
-      }
+    "return unit" in withSparkSession { implicit spark => _ =>
+      import spark.implicits._
+      val program = for {
+        df     <- Task((Dummy(1) :: Dummy(2) :: Nil).toDF())
+        insert <- Task(SparkDataFrameWriter.DatabaseInsert(url, properties)(TableName("sparkDbDataFrameWriter")))
+        update <- Task(SparkDataFrameWriter.DatabaseUpdate(url, properties)(TableName("sparkDbDataFrameWriter")))
+        _      <- Task(insert.run(df)) *> Task(update.run(df))
+        reader  = SparkDataFrameReader.DatabaseReader(url, properties) {
+          SqlQuery("(SELECT * FROM sparkDbDataFrameWriter) as q1")
+        }
+      } yield reader.run.as[Dummy]
 
       mockDb(url = url, dbConfig = dbConf)(query = query) {
-        whenReady(program.provide(new SparkDataFrameWriter with SparkDataFrameReader)) {
+        whenReady(program) {
           case Left(_)   => fail()
           case Right(ds) => ds.collect().toList.sorted mustBe List(Dummy(1), Dummy(2)).sorted
         }

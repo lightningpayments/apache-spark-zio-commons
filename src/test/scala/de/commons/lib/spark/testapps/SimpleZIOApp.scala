@@ -17,7 +17,7 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
   private final case class Pi(value: Double) extends AnyVal
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    SparkRZIO[SparkEnvironment, RandomNumberEnv, Unit](io = program).run.provide(env).exitCode
+    SparkRZIO[R, Unit](io = program).run.provide(env).exitCode
 
   // scalastyle:off
   private val program: ZIO[R, Throwable, Unit] =

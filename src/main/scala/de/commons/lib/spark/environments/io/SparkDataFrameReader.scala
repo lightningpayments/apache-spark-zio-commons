@@ -6,30 +6,26 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.util.Properties
 
-trait SparkDataFrameReader {
+object SparkDataFrameReader {
+  type DataFrameQueryReader   = SqlQuery                 => DatabaseReader
+  type DataFrameMongoDbReader = (DbName, CollectionName) => MongoDbReader
 
-  def sqlReader(
-    sparkSession: SparkSession)(
-    url: String,
-    properties: Properties)(
-    query: SqlQuery
-  ): DataFrame = sparkSession.read.jdbc(url, show"$query", properties)
+  sealed trait Reader extends Product with Serializable {
+    def run(implicit sparkSession: SparkSession): DataFrame
+  }
 
-  def mongoDbReader(
-    sparkSession: SparkSession,
-    properties: Map[String, String])(
-    database: DbName,
-    collection: CollectionName
-  ): DataFrame =
-    sparkSession.read.format("com.mongodb.spark.sql.DefaultSource")
-      .option("database", show"$database")
-      .option("collection", show"$collection")
-      .options(properties)
-      .load()
+  final case class DatabaseReader(url: String, properties: Properties)(query: SqlQuery) extends Reader {
+    override def run(implicit sparkSession: SparkSession): DataFrame =
+      sparkSession.read.jdbc(url, show"$query", properties)
+  }
 
-}
-
-object SparkDataFrameReader extends SparkDataFrameReader {
-  type DataFrameQueryReader   = SqlQuery                 => DataFrame
-  type DataFrameMongoDbReader = (DbName, CollectionName) => DataFrame
+  final case class MongoDbReader(properties: Map[String, String])(dbName: DbName, collectionName: CollectionName)
+    extends Reader {
+    override def run(implicit sparkSession: SparkSession): DataFrame =
+      sparkSession.read.format("com.mongodb.spark.sql.DefaultSource")
+        .option("database", show"$dbName")
+        .option("collection", show"$collectionName")
+        .options(properties)
+        .load()
+  }
 }
