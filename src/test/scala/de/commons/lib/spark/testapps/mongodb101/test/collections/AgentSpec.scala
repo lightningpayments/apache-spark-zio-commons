@@ -1,6 +1,7 @@
 package de.commons.lib.spark.testapps.mongodb101.test.collections
 
 import de.commons.lib.spark.environments.io.SparkDataFrameReader
+import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameMongoDbReader
 import de.commons.lib.spark.testapps.mongodb101.app.logic.collections.Agent
 import de.commons.lib.spark.{MockMongoDbTestSupport, SparkMongoDbTestSupport, TestSpec}
 import org.bson.Document
@@ -24,9 +25,9 @@ class AgentSpec extends TestSpec with SparkMongoDbTestSupport with MockMongoDbTe
   private val docs = Document.parse(json) :: Nil
 
   "Agent#getAll" must {
-    "return one agent dataset" in withSparkSession { spark => _ =>
+    "return one agent dataset" in withSparkSession { implicit spark => _ =>
       mockMongoDb(preparedDocs = docs)(dbName = "agents", collection = "agents", client = client) {
-        val reader = SparkDataFrameReader.mongoDbReader(spark, properties)(_, _)
+        val reader: DataFrameMongoDbReader = SparkDataFrameReader.MongoDbReader(properties)
         whenReady(ZIO(Agent.getAll(reader))) {
           _.map(_.collect().toList) mustBe Right(agent :: Nil)
         }

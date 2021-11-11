@@ -1,6 +1,7 @@
 package de.commons.lib.spark.testapps.sql101.test.logic.joins
 
 import de.commons.lib.spark.environments.io.SparkDataFrameReader
+import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameQueryReader
 import de.commons.lib.spark.testapps.sql101.app.logic.joins.JoinedAgentsOrdersCustomers
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.{Agent, Customer, Order}
 import de.commons.lib.spark.testapps.sql101.test.CreateTablesSupport
@@ -23,7 +24,7 @@ class JoinedAgentsOrdersCustomersSpec
     Order(200100, 1000.00F, 600.00F, LocalDate.parse("2008-08-01"), "C00013", "A001", "SOD")
 
   "JoinedAgentsOrdersCustomers#select" must {
-    "return one order dataset" in withSparkSession { spark => _ =>
+    "return one order dataset" in withSparkSession { implicit spark => _ =>
       mockDb(url, dbConf)(query =
         createTableOrdersQuery,
         createTableCustomerQuery,
@@ -32,13 +33,10 @@ class JoinedAgentsOrdersCustomersSpec
         customer.insert,
         agent.insert
       ) {
-        val program = (for {
-          env    <- ZIO.environment[SparkDataFrameReader]
-          reader  = env.sqlReader(spark)(url, properties)(_)
-          ds      = JoinedAgentsOrdersCustomers.select(reader)
-        } yield ds).provide(SparkDataFrameReader)
-
-        whenReady(program)(_.map(_.collect().toList) mustBe Right(joined :: Nil))
+        val reader: DataFrameQueryReader = SparkDataFrameReader.DatabaseReader(url, properties)
+        whenReady(ZIO(JoinedAgentsOrdersCustomers.select(reader)))(
+          _.map(_.collect().toList) mustBe Right(joined :: Nil)
+        )
       }
     }
   }

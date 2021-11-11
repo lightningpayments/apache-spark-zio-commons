@@ -35,11 +35,11 @@ class SparkDataFrameMongoDbReaderSpec extends TestSpec with SparkMongoDbTestSupp
   private val docs = Document.parse(json) :: Nil
 
   "SparkDataFrameReader#apply" must {
-    "return an instance of agent" in withSparkSession { spark => _ =>
+    "return an instance of agent" in withSparkSession { implicit spark => _ =>
       mockMongoDb(preparedDocs = docs)(dbName = "agents", collection = "agents", client = client) {
         lazy val reader =
-          SparkDataFrameReader.mongoDbReader(spark, properties)(DbName("agents"), CollectionName("agents"))
-        whenReady(ZIO(reader.as[Agent])) {
+          SparkDataFrameReader.MongoDbReader(properties)(DbName("agents"), CollectionName("agents"))
+        whenReady(ZIO(reader.run.as[Agent])) {
           _.map(_.collect().toList) mustBe Right(agent :: Nil)
         }
       }
