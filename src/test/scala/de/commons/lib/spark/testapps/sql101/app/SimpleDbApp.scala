@@ -25,7 +25,7 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
   }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    SparkRZIO[SparkEnvironment, Any, Unit](for {
+    SparkRZIO[SparkEnvironment, Unit](for {
       agentsDf <- dbService.getAgents
       _        <- Task(agentsDf.show)
       _        <- dbService.getCustomers.map(_.show())

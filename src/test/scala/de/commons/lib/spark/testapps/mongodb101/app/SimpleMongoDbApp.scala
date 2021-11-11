@@ -17,7 +17,7 @@ private[testapps] object SimpleMongoDbApp extends zio.App with AppConfig {
     }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    SparkRZIO[SparkEnvironment, Any, Unit](program.map(_.show))
+    SparkRZIO[SparkEnvironment, Unit](program.map(_.show))
       .run
       .provide(new SparkEnvironment(configuration, logger))
       .exitCode
