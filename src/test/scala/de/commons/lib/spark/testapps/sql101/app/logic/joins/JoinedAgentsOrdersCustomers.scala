@@ -38,10 +38,12 @@ object JoinedAgentsOrdersCustomers {
         |) as joined_agents_orders_company
         |""".stripMargin)
 
-  def select(reader: DataFrameQueryReader): Dataset[JoinedAgentsOrdersCustomers] = {
-    val df = reader(query)
-    import df.sparkSession.implicits._
-    df.select(cols =
+  def select(
+    reader: DataFrameQueryReader)(
+    implicit sparkSession: SparkSession
+  ): Dataset[JoinedAgentsOrdersCustomers] = {
+    import sparkSession.implicits._
+    reader(query).run.select(cols =
       $"agent_code"                 as "agentCode",
       $"agent_name"                 as "agentName",
       $"working_area"               as "workingArea",
