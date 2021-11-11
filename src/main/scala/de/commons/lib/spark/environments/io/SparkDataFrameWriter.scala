@@ -12,12 +12,12 @@ trait SparkDataFrameWriter {
     def run(df: DataFrame): Unit
   }
 
-  final case class DatabaseInsert(url: String, properties: Properties)(tableName: TableName) extends Writer {
+  case class DatabaseInsert(url: String, properties: Properties)(tableName: TableName) extends Writer {
     override def run(df: DataFrame): Unit =
       df.write.mode(SaveMode.Append).jdbc(url, show"$tableName", properties)
   }
 
-  final case class DatabaseUpdate(url: String, properties: Properties)(tableName: TableName) extends Writer {
+  case class DatabaseUpdate(url: String, properties: Properties)(tableName: TableName) extends Writer {
     override def run(df: DataFrame): Unit =
       df.write.mode(SaveMode.Overwrite).jdbc(url, show"$tableName", properties)
   }

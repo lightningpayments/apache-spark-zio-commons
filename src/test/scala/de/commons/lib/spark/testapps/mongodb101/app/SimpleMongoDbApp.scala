@@ -10,16 +10,16 @@ import zio.{ExitCode, URIO, ZIO}
 
 private[testapps] object SimpleMongoDbApp extends zio.App with AppConfig {
 
-  private val program: ZIO[SparkEnvironment with SparkDataFrameReader, Throwable, Dataset[Agent]] =
-    ZIO.environment[SparkEnvironment with SparkDataFrameReader].flatMap { env =>
-      val reader: DataFrameMongoDbReader = SparkDataFrameReader.MongoDbReader(properties = properties, _, _)
+  private val program: ZIO[SparkEnvironment, Throwable, Dataset[Agent]] =
+    ZIO.environment[SparkEnvironment].flatMap { env =>
+      val reader: DataFrameMongoDbReader = SparkDataFrameReader.MongoDbReader(properties)
       env.sparkM.map(implicit spark => Agent.getAll(reader))
     }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    SparkRZIO[SparkEnvironment, SparkDataFrameReader, Unit](program.map(_.show))
+    SparkRZIO[SparkEnvironment, Any, Unit](program.map(_.show))
       .run
-      .provide(new SparkEnvironment(configuration, logger) with SparkDataFrameReader)
+      .provide(new SparkEnvironment(configuration, logger))
       .exitCode
 
 }

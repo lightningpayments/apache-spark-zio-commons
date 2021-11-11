@@ -2,7 +2,6 @@ package de.commons.lib.spark.testapps.sql101.app
 
 import de.commons.lib.spark.SparkRunnable.SparkRZIO
 import de.commons.lib.spark.environments.SparkR.SparkEnvironment
-import de.commons.lib.spark.environments.io.{SparkDataFrameWriter, SparkDataFrameReader}
 import de.commons.lib.spark.testapps.sql101.app.logic.services.DbService
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent.encoders
@@ -15,11 +14,10 @@ import scala.language.postfixOps
 
 private[testapps] object SimpleDbApp extends zio.App with AppConfig {
 
-  private type R = SparkDataFrameReader with SparkDataFrameWriter
-  private val env = new SparkEnvironment(configuration, logger) with SparkDataFrameReader with SparkDataFrameWriter
+  private val env = new SparkEnvironment(configuration, logger)
   private val dbService = new DbService(url, properties)
 
-  private val programInsertAgents: Dataset[Agent] => ZIO[SparkEnvironment with R, Throwable, Unit] = ds => {
+  private val programInsertAgents: Dataset[Agent] => ZIO[SparkEnvironment, Throwable, Unit] = ds => {
     val agentCode = "agentCode"
     val takeRandomAgentCode = udf((_: String) => UUID.randomUUID().toString.take(5))
     val agents = Task(ds.withColumn(agentCode, takeRandomAgentCode(col(agentCode))).as[Agent].sort(agentCode))
@@ -27,7 +25,7 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
   }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    SparkRZIO[SparkEnvironment, R, Unit](for {
+    SparkRZIO[SparkEnvironment, Any, Unit](for {
       agentsDf <- dbService.getAgents
       _        <- Task(agentsDf.show)
       _        <- dbService.getCustomers.map(_.show())

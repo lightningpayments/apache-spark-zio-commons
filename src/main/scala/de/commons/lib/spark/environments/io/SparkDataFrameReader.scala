@@ -12,12 +12,12 @@ trait SparkDataFrameReader {
     def run(implicit sparkSession: SparkSession): DataFrame
   }
 
-  final case class DatabaseReader(url: String, properties: Properties, query: SqlQuery) extends Reader {
+  case class DatabaseReader(url: String, properties: Properties)(query: SqlQuery) extends Reader {
     override def run(implicit sparkSession: SparkSession): DataFrame =
       sparkSession.read.jdbc(url, show"$query", properties)
   }
 
-  final case class MongoDbReader(properties: Map[String, String], dbName: DbName, collectionName: CollectionName)
+  case class MongoDbReader(properties: Map[String, String])(dbName: DbName, collectionName: CollectionName)
     extends Reader {
     override def run(implicit sparkSession: SparkSession): DataFrame =
       sparkSession.read.format("com.mongodb.spark.sql.DefaultSource")
