@@ -28,10 +28,9 @@ object Order {
       |""".stripMargin
   )
 
-  def select(reader: DataFrameQueryReader): Dataset[Order] = {
-    val df = reader(query)
-    import df.sparkSession.implicits._
-    df.select(cols =
+  def select(reader: DataFrameQueryReader)(implicit sparkSession: SparkSession): Dataset[Order] = {
+    import sparkSession.implicits._
+    reader(query).run.select(cols =
       $"ord_num"                        as "id",
       $"ord_amount".cast(FloatType)     as "amount",
       $"advance_amount".cast(FloatType) as "advanceAmount",

@@ -37,10 +37,10 @@ object Customer {
       |""".stripMargin
   )
 
-  def select(reader: DataFrameQueryReader): Dataset[Customer] = {
-    val df = reader(query)
-    import df.sparkSession.implicits._
-    df.select(cols =
+  def select(reader: DataFrameQueryReader)(implicit sparkSession: SparkSession): Dataset[Customer] = {
+    import sparkSession.implicits._
+
+    reader(query).run.select(cols =
       $"cust_code"                       as "code",
       $"cust_name"                       as "name",
       $"cust_city"                       as "city",

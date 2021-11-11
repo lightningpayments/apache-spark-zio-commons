@@ -28,7 +28,7 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
       val t = new Throwable
       val io = ZIO.environment[SparkEnvironment] *> Task.effect[String](throw t)
 
-      val runnable = SparkRZIO[SparkEnvironment, Any, String](io).run
+      val runnable = SparkRZIO[SparkEnvironment, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
         case Right(_) => fail()
         case Left(ex) =>
@@ -39,7 +39,7 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
     "return a string when successful" in {
       val io = ZIO.environment[SparkEnvironment] *> Task.succeed("foo")
 
-      val runnable = SparkRZIO[SparkEnvironment, Any, String](io).run
+      val runnable = SparkRZIO[SparkEnvironment, String](io).run
       whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
     }
   }
