@@ -1,6 +1,6 @@
 package de.commons.lib.spark.testapps.sql101.app.logic.services
 
-import de.commons.lib.spark.environments.SparkR.SparkEnvironment
+import de.commons.lib.spark.environments.SparkR
 import de.commons.lib.spark.environments.io.SparkDataFrameReader.{DataFrameQueryReader, DatabaseReader}
 import de.commons.lib.spark.environments.io.SparkDataFrameWriter.{DataFrameDatabaseWriter, DatabaseInsert}
 import de.commons.lib.spark.testapps.sql101.app.logic.joins.JoinedAgentsOrdersCustomers
@@ -15,9 +15,9 @@ private[sql101] final class DbService(url: String, properties: java.util.Propert
   private val databaseInsert: DataFrameDatabaseWriter = DatabaseInsert(url, properties)
 
   // scalastyle:off
-  def getAgents: ZIO[SparkEnvironment, Throwable, DataFrame] =
+  def getAgents: ZIO[SparkR, Throwable, DataFrame] =
     for {
-      env <- ZIO.environment[SparkEnvironment]
+      env <- ZIO.environment[SparkR]
       _   <- env.loggerM.map(_.debug("select all agents"))
       df  <- env.sparkM.map { implicit spark =>
         import spark.implicits._
@@ -31,28 +31,28 @@ private[sql101] final class DbService(url: String, properties: java.util.Propert
     } yield df
   // scalastyle:on
 
-  def insertAgents(ds: Dataset[Agent]): ZIO[SparkEnvironment, Throwable, Unit] =
-    ZIO.environment[SparkEnvironment]
+  def insertAgents(ds: Dataset[Agent]): ZIO[SparkR, Throwable, Unit] =
+    ZIO.environment[SparkR]
       .map(_.loggerM.map(_.debug("insert agents")))
       .map(_ => Agent.insert(ds)(databaseInsert))
 
-  def getCustomers: ZIO[SparkEnvironment, Throwable, Dataset[Customer]] =
+  def getCustomers: ZIO[SparkR, Throwable, Dataset[Customer]] =
     for {
-      env <- ZIO.environment[SparkEnvironment]
+      env <- ZIO.environment[SparkR]
       _   <- env.loggerM.map(_.debug("select all customers"))
       ds  <- env.sparkM.map(implicit spark => Customer.select(databaseReader))
     } yield ds
 
-  def getOrders: ZIO[SparkEnvironment, Throwable, Dataset[Order]] =
+  def getOrders: ZIO[SparkR, Throwable, Dataset[Order]] =
     for {
-      env <- ZIO.environment[SparkEnvironment]
+      env <- ZIO.environment[SparkR]
       _   <- env.loggerM.map(_.debug("select all orders"))
       ds  <- env.sparkM.map(implicit spark => Order.select(databaseReader))
     } yield ds
 
-  def getAgentsStatistics: ZIO[SparkEnvironment, Throwable, Dataset[JoinedAgentsOrdersCustomers]] =
+  def getAgentsStatistics: ZIO[SparkR, Throwable, Dataset[JoinedAgentsOrdersCustomers]] =
     for {
-      env <- ZIO.environment[SparkEnvironment]
+      env <- ZIO.environment[SparkR]
       _   <- env.loggerM.map(_.debug("join agents via order via customers"))
       ds  <- env.sparkM.map(implicit spark => JoinedAgentsOrdersCustomers.select(databaseReader))
     } yield ds

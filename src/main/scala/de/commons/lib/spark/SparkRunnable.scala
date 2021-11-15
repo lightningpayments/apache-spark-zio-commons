@@ -1,6 +1,6 @@
 package de.commons.lib.spark
 
-import de.commons.lib.spark.environments.SparkR
+import de.commons.lib.spark.environments.SparkRT
 import de.commons.lib.spark.errors.SparkRunnableThrowable
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
@@ -15,19 +15,17 @@ trait SparkRunnable[-R, A] {
  */
 object SparkRunnable {
 
-  final case class SparkRZIO[-SR <: SparkR, A](io: ZIO[SR, Throwable, A])
-    extends SparkRunnable[SR, A] {
+  final case class RunnableSparkRT[-SR <: SparkRT, A](io: ZIO[SR, Throwable, A]) extends SparkRunnable[SR, A] {
     override def run: ZIO[SR, Throwable, A] =
-      for {
-        (spark, logger) <- ZIO.tupledPar(
-          zio1 = ZIO.environment[SR].>>=(_.sparkM),
-          zio2 = ZIO.environment[SR].>>=(_.loggerM)
-        )
-        a <- foldM[SR, A](io)(implicitly[SparkSession](spark), implicitly[Logger](logger))
-      } yield a
+      ZIO.environment[SR].flatMap(env =>
+        ZIO.tupledPar(env.sparkM, env.loggerM).flatMap {
+          case (session, logger) =>
+            foldM[SR, A](io)(implicitly[SparkSession](session), implicitly[Logger](logger))
+        }
+      )
   }
 
-  final case class SparkZIO[-R, A](
+  final case class RunnableR[-R, A](
       io: ZIO[R, Throwable, A])(
       implicit spark: SparkSession,
       logger: Logger
@@ -35,7 +33,7 @@ object SparkRunnable {
     override def run: ZIO[R, Throwable, A] = foldM[R, A](io)
   }
 
-  final case class SparkTask[A](
+  final case class Runnable[A](
       io: Task[A])(
       implicit spark: SparkSession,
       logger: Logger

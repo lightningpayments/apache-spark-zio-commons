@@ -2,7 +2,24 @@
 
 - recommended java version: openjdk8
 
-## install test db
+## application.conf minimal requirements database
+
+```
+spark {
+  appName = "SimpleDbApp"
+  # optional
+  db {
+    config {
+      "driver": "com.mysql.cj.jdbc.Driver"
+      "url": "jdbc:mysql://localhost:3305/sparkdb"
+      "user": "ronny"
+      "password": "password"
+    }
+  }
+}
+```
+
+## (optional) install test db
 
 ```bash
 # download test db image
@@ -26,18 +43,3 @@ docker exec -it <container-id> bash -l
 # https://medium.com/tech-learn-share/docker-mysql-access-denied-for-user-172-17-0-1-using-password-yes-c5eadad582d3
 ```
 
-## application.conf minimal requirements database
-
-```
-spark {
-  appName = "SimpleDbApp"
-  db {
-    config {
-      "driver": "com.mysql.cj.jdbc.Driver"
-      "url": "jdbc:mysql://localhost:3305/sparkdb"
-      "user": "ronny"
-      "password": "password"
-    }
-  }
-}
-```
