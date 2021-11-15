@@ -7,6 +7,7 @@ import play.api.Configuration
 import java.util.UUID
 
 final class SparkSessionLoader(configuration: Configuration) {
+
   private val appName: String =
     configuration.getOptional[String]("spark.appName").getOrElse(s"app_${UUID.randomUUID().toString}")
 
@@ -21,4 +22,5 @@ final class SparkSessionLoader(configuration: Configuration) {
     val spark  = SparkSession.builder().appName(appName).master(master).config(config).getOrCreate()
     spark
   }
+
 }

@@ -1,14 +1,14 @@
 package de.commons.lib.spark.testapps
 
-import de.commons.lib.spark.SparkRunnable.SparkRZIO
-import de.commons.lib.spark.environments.SparkR._
+import de.commons.lib.spark.SparkRunnable.RunnableSparkRT
+import de.commons.lib.spark.environments.SparkR
 import zio.{ExitCode, Task, URIO, ZEnv, ZIO}
 
 private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
 
-  private type R = SparkEnvironment with RandomNumberEnv
+  private type R = SparkR with RandomNumberEnv
 
-  private val env = new SparkEnvironment(configuration, logger) with RandomNumberEnv
+  private val env = new SparkR(configuration, logger) with RandomNumberEnv
 
   trait RandomNumberEnv {
     val randomMathGen: Task[Double] = Task(math.random())
@@ -17,7 +17,7 @@ private[testapps] object SimpleZIOApp extends zio.App with AppConfig {
   private final case class Pi(value: Double) extends AnyVal
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    SparkRZIO[R, Unit](io = program).run.provide(env).exitCode
+    RunnableSparkRT[R, Unit](io = program).run.provide(env).exitCode
 
   // scalastyle:off
   private val program: ZIO[R, Throwable, Unit] =

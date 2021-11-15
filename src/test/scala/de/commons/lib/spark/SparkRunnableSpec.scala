@@ -1,7 +1,7 @@
 package de.commons.lib.spark
 
-import de.commons.lib.spark.SparkRunnable.{SparkRZIO, SparkTask, SparkZIO}
-import de.commons.lib.spark.environments.SparkR.SparkEnvironment
+import de.commons.lib.spark.SparkRunnable.{Runnable, RunnableR, RunnableSparkRT}
+import de.commons.lib.spark.environments.SparkR
 import de.commons.lib.spark.errors.SparkRunnableThrowable
 import zio.{Task, ZIO}
 
@@ -18,7 +18,7 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
         override def random: Task[Int] = Task(Random.nextInt())
       }
 
-      val runnable: SparkZIO[RandomInt, String] = SparkZIO[RandomTrait[Int], String](Task.succeed("foo"))
+      val runnable: RunnableR[RandomInt, String] = RunnableR[RandomTrait[Int], String](Task.succeed("foo"))
       whenReady(runnable.run.provide(new RandomInt))(_ mustBe Right("foo"))
     }
   }
@@ -26,10 +26,10 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
   "SparkRZIO#run" must {
     "throws an error" in {
       val t = new Throwable
-      val io = ZIO.environment[SparkEnvironment] *> Task.effect[String](throw t)
+      val io = ZIO.environment[SparkR] *> Task.effect[String](throw t)
 
-      val runnable = SparkRZIO[SparkEnvironment, String](io).run
-      whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
+      val runnable = RunnableSparkRT[SparkR, String](io).run
+      whenReady(runnable.provide(new SparkR(configuration, logger))) {
         case Right(_) => fail()
         case Left(ex) =>
           ex mustBe SparkRunnableThrowable(t)
@@ -37,20 +37,20 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
       }
     }
     "return a string when successful" in {
-      val io = ZIO.environment[SparkEnvironment] *> Task.succeed("foo")
+      val io = ZIO.environment[SparkR] *> Task.succeed("foo")
 
-      val runnable = SparkRZIO[SparkEnvironment, String](io).run
-      whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
+      val runnable = RunnableSparkRT[SparkR, String](io).run
+      whenReady(runnable.provide(new SparkR(configuration, logger)))(_ mustBe Right("foo"))
     }
   }
 
   "SparkZIO#run" must {
     "throws an error" in withSparkSession { implicit spark => _ =>
       val t = new Throwable
-      val io = ZIO.environment[SparkEnvironment] *> Task.effect[String](throw t)
+      val io = ZIO.environment[SparkR] *> Task.effect[String](throw t)
 
-      val runnable = SparkZIO[SparkEnvironment, String](io).run
-      whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
+      val runnable = RunnableR[SparkR, String](io).run
+      whenReady(runnable.provide(new SparkR(configuration, logger))) {
         case Right(_) => fail()
         case Left(ex) =>
           ex mustBe SparkRunnableThrowable(t)
@@ -58,20 +58,20 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
       }
     }
     "return a string when successful" in withSparkSession { implicit spark => _ =>
-      val io = ZIO.environment[SparkEnvironment] *> Task.succeed("foo")
+      val io = ZIO.environment[SparkR] *> Task.succeed("foo")
 
-      val runnable = SparkZIO[SparkEnvironment, String](io).run
-      whenReady(runnable.provide(new SparkEnvironment(configuration, logger)))(_ mustBe Right("foo"))
+      val runnable = RunnableR[SparkR, String](io).run
+      whenReady(runnable.provide(new SparkR(configuration, logger)))(_ mustBe Right("foo"))
     }
   }
 
   "SparkTask#run" must {
     "throws an error" in withSparkSession { implicit spark => _ =>
       val t = new Throwable
-      val io = ZIO.environment[SparkEnvironment] *> Task.effect[String](throw t)
+      val io = ZIO.environment[SparkR] *> Task.effect[String](throw t)
 
-      val runnable = SparkZIO[SparkEnvironment, String](io).run
-      whenReady(runnable.provide(new SparkEnvironment(configuration, logger))) {
+      val runnable = RunnableR[SparkR, String](io).run
+      whenReady(runnable.provide(new SparkR(configuration, logger))) {
         case Right(_) => fail()
         case Left(ex) =>
           ex mustBe SparkRunnableThrowable(t)
@@ -79,7 +79,7 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
       }
     }
     "return a string when successful" in withSparkSession { implicit spark => _ =>
-      val runnable = SparkTask[String](Task.succeed("foo")).run
+      val runnable = Runnable[String](Task.succeed("foo")).run
       whenReady(runnable)(_ mustBe Right("foo"))
     }
   }

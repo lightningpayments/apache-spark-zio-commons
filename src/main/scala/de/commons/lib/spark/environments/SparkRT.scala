@@ -10,7 +10,7 @@ import zio.{Task, ZIO}
 import scala.language.{higherKinds, postfixOps}
 import scala.util.Try
 
-private[environments] trait SparkRFunctions {
+trait SparkRT {
 
   val configuration: Configuration
   val logger: Logger
