@@ -2,7 +2,7 @@ package de.commons.lib.spark.environments
 
 import de.commons.lib.spark.{SparkMySqlTestSupport, TestSpec}
 import org.apache.log4j.Logger
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Dataset, Encoder, Encoders, SparkSession}
 import zio.internal.Platform
 import zio.interop.catz.monadErrorInstance
 import zio.{Task, ZEnv, ZIO}
@@ -10,6 +10,11 @@ import zio.{Task, ZEnv, ZIO}
 import scala.util.Try
 
 class SparkRSpec extends TestSpec with SparkMySqlTestSupport {
+
+  case class Dummy(value: Int)
+  object Dummy {
+    implicit val encoders: Encoder[Dummy] = Encoders.product[Dummy]
+  }
 
   "SparkR" must {
     "sparkM" in {
@@ -21,9 +26,19 @@ class SparkRSpec extends TestSpec with SparkMySqlTestSupport {
     }
     "apply" in {
       val env = new SparkR(configuration, logger)
-      def f(spark: SparkSession, logger: Logger): Int = 1
 
-      whenReady(env.apply(f))(_ mustBe Right(1))
+      case class Service(spark: SparkSession, logger: Logger) {
+        def createDummies(dummies: Dummy*): Dataset[Dummy] = {
+          import Dummy._
+          logger.info("create dataset of dummies")
+          spark.createDataset(dummies)
+        }
+      }
+
+      whenReady(env.apply(Service.apply).map(_.createDummies(Dummy(1), Dummy(2), Dummy(3))).map(_.collect().toList)) {
+        case Right(unordered) => unordered.sortBy(_.value) mustBe (Dummy(1) :: Dummy(2) :: Dummy(3) :: Nil)
+        case Left(_) => fail()
+      }
     }
     "applyR" in {
       val env = new SparkR(configuration, logger)
