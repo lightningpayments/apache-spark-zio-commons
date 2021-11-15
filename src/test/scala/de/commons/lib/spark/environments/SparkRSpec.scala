@@ -9,9 +9,9 @@ import zio.{Task, ZEnv, ZIO}
 
 import scala.util.Try
 
-class SparkEnvironmentSpec extends TestSpec with SparkMySqlTestSupport {
+class SparkRSpec extends TestSpec with SparkMySqlTestSupport {
 
-  "SparkEnvironment" must {
+  "SparkR" must {
     "sparkM" in {
       val env = new SparkR(configuration, logger)
       whenReady(env.sparkM) {
@@ -35,18 +35,28 @@ class SparkEnvironmentSpec extends TestSpec with SparkMySqlTestSupport {
       runtime.unsafeRun(program) mustBe 1
     }
     "lift" in {
-      def f(a: String)(spark: SparkSession, logger: Logger): Int = 1
+      def f(spark: SparkSession, logger: Logger)(a: String): Int = 1
       val env = new SparkR(configuration, logger)
-      val program: Task[Int] = env.lift(f)(Task("foo")).flatten
+      val program1: Task[Int] = env.lift(f)(Task("foo")).flatten
+      whenReady(program1)(_ mustBe Right(1))
 
-      whenReady(program)(_ mustBe Right(1))
+      case class Dummy(spark: SparkSession, logger: Logger) {
+        def identity(a: String): String = a
+      }
+      val program2: Task[String] = env.lift((spark, logger) => Dummy(spark, logger).identity)(Task("foo")).flatten
+      whenReady(program2)(_ mustBe Right("foo"))
     }
     "liftR" in {
-      def f(a: Int)(spark: SparkSession, logger: Logger): Int = 1
+      def f(spark: SparkSession, logger: Logger)(a: Int): Int = 1
       val env = new SparkR(configuration, logger)
-      val program = env.liftR(f)(Task(1)).flatten
+      val program1 = env.liftR(f)(Task(1)).flatten
+      whenReady(program1)(_ mustBe Right(1))
 
-      whenReady(program)(_ mustBe Right(1))
+      case class Dummy(spark: SparkSession, logger: Logger) {
+        def identity(a: String): String = a
+      }
+      val program2: Task[String] = env.liftR((spark, logger) => Dummy(spark, logger).identity)(Task("foo")).flatten
+      whenReady(program2)(_ mustBe Right("foo"))
     }
     "raiseError" in {
       val env = new SparkR(configuration, logger)

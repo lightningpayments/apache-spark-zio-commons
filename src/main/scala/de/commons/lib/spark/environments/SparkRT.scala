@@ -32,13 +32,13 @@ trait SparkRT {
       case (session, logger) => ff.map(_(session, logger))
     }
 
-  def lift[F[_], A, B](f: A => (SparkSession, Logger) => B)(fa: => F[A])(implicit M: Functor[F]): Task[F[B]] =
+  def lift[F[_], A, B](f: (SparkSession, Logger) => A => B)(fa: => F[A])(implicit M: Functor[F]): Task[F[B]] =
     ZIO.tupledPar(sparkM, loggerM).flatMap {
-      case (session, logger) => Task(M.fmap(fa)(f(_)(session, logger)))
+      case (session, logger) => Task(M.fmap(fa)(f(session, logger)))
     }
 
   def liftR[R, F[_], A, B](
-    f: A => (SparkSession, Logger) => B)(
+    f: (SparkSession, Logger) => A => B)(
     fa: => F[A])(
     implicit M: Functor[F]
   ): ZIO[R, Throwable, F[B]] =

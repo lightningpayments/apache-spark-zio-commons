@@ -9,7 +9,7 @@ import scala.util.Random
 
 class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
 
-  "SparkR*" must {
+  "RunnableR*" must {
     "test contravariance" in withSparkSession { implicit spark => implicit logger =>
       trait RandomTrait[T] {
         def random: Task[T]
@@ -23,7 +23,7 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
     }
   }
 
-  "SparkRZIO#run" must {
+  "RunnableSparkRT#run" must {
     "throws an error" in {
       val t = new Throwable
       val io = ZIO.environment[SparkR] *> Task.effect[String](throw t)
@@ -44,7 +44,7 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
     }
   }
 
-  "SparkZIO#run" must {
+  "RunnableR#run" must {
     "throws an error" in withSparkSession { implicit spark => _ =>
       val t = new Throwable
       val io = ZIO.environment[SparkR] *> Task.effect[String](throw t)
@@ -65,7 +65,7 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
     }
   }
 
-  "SparkTask#run" must {
+  "Runnable#run" must {
     "throws an error" in withSparkSession { implicit spark => _ =>
       val t = new Throwable
       val io = ZIO.environment[SparkR] *> Task.effect[String](throw t)
