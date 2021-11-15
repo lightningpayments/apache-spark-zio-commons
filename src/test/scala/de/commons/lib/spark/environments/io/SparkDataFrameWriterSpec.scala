@@ -3,7 +3,7 @@ package de.commons.lib.spark.environments.io
 import de.commons.lib.spark._
 import de.commons.lib.spark.models.{SqlQuery, TableName}
 import org.apache.spark.sql.{Encoder, Encoders}
-import zio.{Task, ZIO}
+import zio.Task
 
 class SparkDataFrameWriterSpec extends TestSpec with SparkMySqlTestSupport with MockDbTestSupport {
 

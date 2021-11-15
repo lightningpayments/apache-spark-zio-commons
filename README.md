@@ -2,7 +2,24 @@
 
 - recommended java version: openjdk8
 
-## install test db
+## application.conf minimal requirements database
+
+```
+spark {
+  appName = "SimpleDbApp"
+  # optional
+  db {
+    config {
+      "driver": "com.mysql.cj.jdbc.Driver"
+      "url": "jdbc:mysql://localhost:3305/sparkdb"
+      "user": "ronny"
+      "password": "password"
+    }
+  }
+}
+```
+
+## (optional) install test db
 
 ```bash
 # download test db image
@@ -26,56 +43,3 @@ docker exec -it <container-id> bash -l
 # https://medium.com/tech-learn-share/docker-mysql-access-denied-for-user-172-17-0-1-using-password-yes-c5eadad582d3
 ```
 
-## application.conf minimal requirements
-
-```
-spark {
-  appName = "SimpleDbApp"
-  db {
-    config {
-      "driver": "com.mysql.cj.jdbc.Driver"
-      "url": "jdbc:mysql://localhost:3305/sparkdb"
-      "user": "ronny"
-      "password": "password"
-    }
-  }
-}
-```
-
-## Example
-
-### SparkEnvironment example with SparkDBDataFrameReader
-
-```scala
-
-// url and props needed for e.g.
-trait SparkDbDataFrameReader {
-  def reader(
-    sparkSession: SparkSession)(
-    url: String,
-    properties: Properties)(
-    query: SqlQuery
-  ): DataFrame = sparkSession.read.jdbc(url, query.value, properties)
-}
-
-object SparkDbDataFrameReader extends SparkDbDataFrameReader {
-  type DataFrameReader = SqlQuery => DataFrame
-}
-
-
-// usage
-def getCustomers: ZIO[SparkEnvironment with SparkDBDataFrameReader, Throwable, Dataset[Customer]] = {
-  for {
-    env <- ZIO.environment[SparkEnvironment with SparkDBDataFrameReader]
-    _   <- env.loggerM.map(_.debug("select all customers"))
-    ds  <- readerM.map(Customer.select) // Customer class type as a table reference
-  } yield ds
-}
-
-private val readerM: ZIO[SparkEnvironment with SparkDBDataFrameReader, Throwable, SqlQuery => DataFrame] =
-  for {
-    env    <- ZIO.environment[SparkEnvironment with SparkDBDataFrameReader]
-    spark  <- env.sparkM
-    reader  = env.reader(spark)(url, properties)(_)
-  } yield reader
-```
