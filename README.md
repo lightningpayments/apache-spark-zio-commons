@@ -19,6 +19,25 @@ spark {
 }
 ```
 
+## (optional) install test mongodb
+
+```yaml
+# docker-compose.yml
+version: "3.8"
+services:
+  mongodb:
+    image : mongo
+    container_name: mongodb
+    environment:
+    - PUID=1000
+    - PGID=1000
+    volumes:
+    - /Users/rwels/Coding/docker/mongodb:/data/db
+    ports:
+    - 27017:27017
+    restart: unless-stopped
+```
+
 ## (optional) install test db
 
 ```bash
