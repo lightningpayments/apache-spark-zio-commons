@@ -1,5 +1,6 @@
 package de.commons.lib.spark.testapps.mongodb101.app.logic.collections
 
+import cats.data.NonEmptyList
 import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameMongoDbReader
 import de.commons.lib.spark.models.{CollectionName, DbName}
 import org.apache.spark.sql.{Dataset, Encoder, Encoders, SparkSession}
@@ -20,9 +21,8 @@ object Agent {
   private val collectionName = CollectionName("agents")
   private val dbName = DbName("agents")
 
-  def getAll(reader: DataFrameMongoDbReader)(implicit sparkSession: SparkSession): Dataset[Agent] = {
+  private def getAll(reader: DataFrameMongoDbReader)(implicit sparkSession: SparkSession): Dataset[Agent] = {
     import sparkSession.implicits._
-
     reader(dbName, collectionName).run.select(cols =
       $"AGENT_CODE"   as "agentCode",
       $"AGENT_NAME"   as "agentName",
@@ -31,6 +31,15 @@ object Agent {
       $"PHONE_NO"     as "phoneNo",
       $"COUNTRY"      as "country"
     ).as[Agent]
+  }
+
+  def select(
+    reader: DataFrameMongoDbReader)(
+    agentCodes: NonEmptyList[String])(
+    implicit sparkSession: SparkSession
+  ): Dataset[Agent] = {
+    import sparkSession.implicits._
+    getAll(reader).filter($"agentCode".isin(agentCodes.toList: _*))
   }
 
 }
