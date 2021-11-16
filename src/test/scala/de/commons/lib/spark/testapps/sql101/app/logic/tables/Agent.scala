@@ -35,7 +35,7 @@ object Agent {
     )
   }
 
-  private val query: SqlQuery = SqlQuery(s"(SELECT ${cols: _*} FROM agents) as agents")
+  private val query: SqlQuery = SqlQuery(s"(SELECT ${cols.mkString(",")} FROM agents) as agents")
 
   def select(reader: DataFrameQueryReader)(implicit sparkSession: SparkSession): Dataset[Agent] =
     reader(query).run.select(columnAliases: _*).as[Agent]
