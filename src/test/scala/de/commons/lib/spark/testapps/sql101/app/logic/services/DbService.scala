@@ -5,8 +5,7 @@ import de.commons.lib.spark.environments.io.SparkDataFrameReader.{DataFrameQuery
 import de.commons.lib.spark.environments.io.SparkDataFrameWriter.{DataFrameDatabaseWriter, DatabaseInsert}
 import de.commons.lib.spark.testapps.sql101.app.logic.joins.JoinedAgentsOrdersCustomers
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.{Agent, Customer, Order}
-import org.apache.spark.sql.functions.{lit, when}
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.Dataset
 import zio.ZIO
 
 private[sql101] final class DbService(url: String, properties: java.util.Properties) {
@@ -14,22 +13,12 @@ private[sql101] final class DbService(url: String, properties: java.util.Propert
   private val databaseReader: DataFrameQueryReader = DatabaseReader(url, properties)
   private val databaseInsert: DataFrameDatabaseWriter = DatabaseInsert(url, properties)
 
-  // scalastyle:off
-  def getAgents: ZIO[SparkR, Throwable, DataFrame] =
+  def getAgents: ZIO[SparkR, Throwable, Dataset[Agent]] =
     for {
       env <- ZIO.environment[SparkR]
       _   <- env.loggerM.map(_.debug("select all agents"))
-      df  <- env.sparkM.map { implicit spark =>
-        import spark.implicits._
-        Agent.select(databaseReader).withColumn(
-          colName = "country",
-          col     = when(
-            condition = $"country".isNull || $"country".isin("null"),
-            value     = lit(null).cast("string"))
-        )
-      }
-    } yield df
-  // scalastyle:on
+      ds  <- env.sparkM.map(implicit spark => Agent.select(databaseReader))
+    } yield ds
 
   def insertAgents(ds: Dataset[Agent]): ZIO[SparkR, Throwable, Unit] =
     ZIO.environment[SparkR]
