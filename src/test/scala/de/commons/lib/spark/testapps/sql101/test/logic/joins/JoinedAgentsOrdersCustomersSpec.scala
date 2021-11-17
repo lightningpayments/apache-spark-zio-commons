@@ -1,7 +1,7 @@
 package de.commons.lib.spark.testapps.sql101.test.logic.joins
 
-import de.commons.lib.spark.environments.io.SparkDataFrameReader
-import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameQueryReader
+import de.commons.lib.spark.io.SparkDataFrameReader
+import de.commons.lib.spark.io.SparkDataFrameReader.DataFrameQueryReader
 import de.commons.lib.spark.testapps.sql101.app.logic.joins.JoinedAgentsOrdersCustomers
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.{Agent, Customer, Order}
 import de.commons.lib.spark.testapps.sql101.test.CreateTablesSupport

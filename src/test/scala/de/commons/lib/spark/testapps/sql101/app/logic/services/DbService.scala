@@ -1,8 +1,8 @@
 package de.commons.lib.spark.testapps.sql101.app.logic.services
 
 import de.commons.lib.spark.environments.SparkR
-import de.commons.lib.spark.environments.io.SparkDataFrameReader.{DataFrameQueryReader, DatabaseReader}
-import de.commons.lib.spark.environments.io.SparkDataFrameWriter.{DataFrameDatabaseWriter, DatabaseInsert}
+import de.commons.lib.spark.io.SparkDataFrameReader.{DataFrameQueryReader, DatabaseReader}
+import de.commons.lib.spark.io.SparkDataFrameWriter.{DataFrameDatabaseWriter, DatabaseInsert}
 import de.commons.lib.spark.testapps.sql101.app.logic.joins.JoinedAgentsOrdersCustomers
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.{Agent, Customer, Order}
 import org.apache.spark.sql.Dataset
