@@ -4,10 +4,10 @@ import de.commons.lib.spark.environments.SparkRT
 import de.commons.lib.spark.errors.SparkRunnableThrowable
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
-import zio.{Task, ZIO}
+import zio.{RIO, Task, ZIO}
 
 trait SparkRunnable[-R, A] {
-  def run: ZIO[R, Throwable, A]
+  def run: RIO[R, A]
 }
 
 /**
@@ -15,8 +15,8 @@ trait SparkRunnable[-R, A] {
  */
 object SparkRunnable {
 
-  final case class RunnableSparkRT[-SR <: SparkRT, A](io: ZIO[SR, Throwable, A]) extends SparkRunnable[SR, A] {
-    override def run: ZIO[SR, Throwable, A] =
+  final case class RunnableSparkRT[-SR <: SparkRT, A](io: RIO[SR, A]) extends SparkRunnable[SR, A] {
+    override def run: RIO[SR, A] =
       ZIO.environment[SR].flatMap(env =>
         ZIO.tupledPar(env.sparkM, env.loggerM).flatMap {
           case (session, logger) =>
@@ -26,11 +26,11 @@ object SparkRunnable {
   }
 
   final case class RunnableR[-R, A](
-      io: ZIO[R, Throwable, A])(
+      io: RIO[R, A])(
       implicit spark: SparkSession,
       logger: Logger
   ) extends SparkRunnable[R, A] {
-    override def run: ZIO[R, Throwable, A] = foldM[R, A](io)
+    override def run: RIO[R, A] = foldM[R, A](io)
   }
 
   final case class Runnable[A](
@@ -42,10 +42,10 @@ object SparkRunnable {
   }
 
   private def foldM[R, A](
-    io: => ZIO[R, Throwable, A])(
+    io: RIO[R, A])(
     implicit spark: SparkSession,
     logger: Logger
-  ): ZIO[R, Throwable, A] = io.foldM(
+  ): RIO[R, A] = io.foldM(
     failure = ex => Task(spark.stop()) >>> Task.fail(ex),
     success = a  => Task(spark.stop()) >>> Task.succeed(a)
   ).catchAll { ex =>
