@@ -7,7 +7,7 @@ private[testapps] object ReferentialTransparencyExampleApp extends zio.App {
   // scalastyle:off
 
   private def subtractSalesTax(money: Double): Double = {
-    val result = money * 100 / 119
+    val result = money * 100.0 / 119.0
     println(s"Your Money is $result")
     result
   }
