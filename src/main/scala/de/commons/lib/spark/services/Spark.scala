@@ -1,4 +1,4 @@
-package de.commons.lib.spark.environments
+package de.commons.lib.spark.services
 
 import org.apache.log4j.Logger
 import play.api.Configuration
@@ -11,19 +11,19 @@ object Spark {
   type HasSpark = Has[Service]
 
   trait Service {
-    def apply(config: Configuration, logging: Logger): Task[SparkRT]
+    def apply(config: Configuration, logging: Logger): Task[SparkT]
   }
 
   val live: ULayer[HasSpark] = ZLayer.succeed {
     (config: Configuration, logging: Logger) => Task.succeed {
-      new SparkRT {
+      new SparkT {
         override val configuration: Configuration = config
         override val logger: Logger = logging
       }
     }
   }
 
-  def apply(implicit config: Configuration, logger: Logger): ZIO[HasSpark, Throwable, SparkRT] =
+  def apply(implicit config: Configuration, logger: Logger): ZIO[HasSpark, Throwable, SparkT] =
     ZIO.accessM[HasSpark](_.get.apply(config, logger))
 
 }

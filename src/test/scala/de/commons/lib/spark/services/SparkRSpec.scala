@@ -1,5 +1,6 @@
-package de.commons.lib.spark.environments
+package de.commons.lib.spark.services
 
+/*
 import de.commons.lib.spark.{SparkMySqlTestSupport, TestSpec}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Dataset, Encoder, Encoders, SparkSession}
@@ -9,16 +10,16 @@ import zio.{Task, ZEnv, ZIO}
 
 import scala.util.Try
 
-class SparkRSpec extends TestSpec with SparkMySqlTestSupport {
+class SparkTSpec extends TestSpec with SparkMySqlTestSupport {
 
   case class Dummy(value: Int)
   object Dummy {
     implicit val encoders: Encoder[Dummy] = Encoders.product[Dummy]
   }
 
-  "SparkR" must {
+  "SparkT" must {
     "sparkM" in {
-      val env = new SparkR(configuration, logger)
+      val env = new SparkT(configuration, logger)
       whenReady(env.sparkM) {
         case Left(_) => fail()
         case Right(value) => value mustBe a[SparkSession]
@@ -87,3 +88,4 @@ class SparkRSpec extends TestSpec with SparkMySqlTestSupport {
   }
 
 }
+*/

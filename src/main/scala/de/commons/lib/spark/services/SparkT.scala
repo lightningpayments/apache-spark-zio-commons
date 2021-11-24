@@ -1,4 +1,4 @@
-package de.commons.lib.spark.environments
+package de.commons.lib.spark.services
 
 import cats.Functor
 import de.commons.lib.spark.SparkSessionLoader
@@ -10,7 +10,7 @@ import zio.{Task, ZIO}
 import scala.language.{higherKinds, postfixOps}
 import scala.util.Try
 
-trait SparkRT {
+trait SparkT {
 
   val configuration: Configuration
   val logger: Logger
