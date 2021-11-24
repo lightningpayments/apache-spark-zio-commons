@@ -1,7 +1,7 @@
 package de.commons.lib.spark.testapps.sql101.app
 
-import de.commons.lib.spark.SparkRunnable.RunnableSparkRT
-import de.commons.lib.spark.environments.SparkR
+import de.commons.lib.spark.services.Spark.HasSpark
+import de.commons.lib.spark.services.{Spark, SparkT}
 import de.commons.lib.spark.testapps.sql101.app.logic.services.DbService
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Agent.encoders
@@ -14,18 +14,18 @@ import scala.language.postfixOps
 
 private[testapps] object SimpleDbApp extends zio.App with AppConfig {
 
-  private val env = new SparkR(configuration, logger)
-  private val dbService = new DbService(url, properties)
+  private val sparkIO: ZIO[HasSpark, Throwable, SparkT] = Spark.apply(configuration, logger)
+  private val dbService = new DbService(url, properties, sparkIO)
 
-  private val programInsertAgents: Dataset[Agent] => ZIO[SparkR, Throwable, Unit] = ds => {
+  private def programInsertAgents(ds: Dataset[Agent]): ZIO[HasSpark, Throwable, Unit] = {
     val agentCode = "agentCode"
     val takeRandomAgentCode = udf((_: String) => UUID.randomUUID().toString.take(5))
     val agents = Task(ds.withColumn(agentCode, takeRandomAgentCode(col(agentCode))).as[Agent].sort(agentCode))
     agents >>= dbService.insertAgents
   }
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    RunnableSparkRT[SparkR, Unit](for {
+  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
+    val io: ZIO[HasSpark, Throwable, Unit] = for {
       agentsDf <- dbService.getAgents
       _        <- Task(agentsDf.show)
       _        <- dbService.getCustomers.map(_.show())
@@ -33,9 +33,9 @@ private[testapps] object SimpleDbApp extends zio.App with AppConfig {
       _        <- dbService.getAgentsStatistics.map(_.show())
       _        <- programInsertAgents(agentsDf.as[Agent])
       _        <- dbService.getAgents.map(_.show())
-    } yield ())
-      .run
-      .provide(env)
-      .exitCode
+    } yield ()
+
+    io.provideLayer(Spark.live).exitCode
+  }
 
 }
