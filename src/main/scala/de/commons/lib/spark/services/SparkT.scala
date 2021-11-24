@@ -23,6 +23,8 @@ trait SparkT {
 
   val loggerM: Task[Logger] = Task.succeed(logger)
 
+  val sparkWithLogger: Task[(SparkSession, Logger)] = ZIO.tupled(sparkM, loggerM)
+
   val unit: Task[Unit] = Task.unit
 
   def apply[A](f: (SparkSession, Logger) => A): Task[A] = ZIO.tupledPar(sparkM, loggerM).map(f tupled)
