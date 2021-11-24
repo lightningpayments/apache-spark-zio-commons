@@ -40,6 +40,8 @@ services:
 
 ## (optional) install test db
 
+[Example DB](https://www.w3resource.com/sql/sql-table.php)
+
 ```bash
 # download test db image
 docker pull ronakkany/spark-test-maria-db:latest
