@@ -8,7 +8,7 @@ import org.apache.spark.sql.types.FloatType
 import java.time.LocalDate
 
 private[sql101] final case class Order(
-    id: Int,
+    id: Float,
     amount: Float,
     advanceAmount: Float,
     orderDate: LocalDate,
@@ -31,7 +31,7 @@ object Order {
   def select(reader: DataFrameQueryReader)(implicit sparkSession: SparkSession): Dataset[Order] = {
     import sparkSession.implicits._
     reader(query).run.select(cols =
-      $"ord_num"                        as "id",
+      $"ord_num".cast(FloatType)        as "id",
       $"ord_amount".cast(FloatType)     as "amount",
       $"advance_amount".cast(FloatType) as "advanceAmount",
       $"ord_date"                       as "orderDate",

@@ -19,8 +19,8 @@ trait AppConfig {
       |  db {
       |    config {
       |      "driver": "com.mysql.cj.jdbc.Driver"
-      |      "url": "jdbc:mysql://localhost:3305/sparkdb"
-      |      "user": "ronny"
+      |      "url": "jdbc:mysql://localhost:3306/sparkdb"
+      |      "user": "root"
       |      "password": "password"
       |    }
       |  }

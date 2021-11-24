@@ -11,7 +11,7 @@ spark {
   db {
     config {
       "driver": "com.mysql.cj.jdbc.Driver"
-      "url": "jdbc:mysql://localhost:3305/sparkdb"
+      "url": "jdbc:mysql://localhost:3306/sparkdb"
       "user": "ronny"
       "password": "password"
     }
