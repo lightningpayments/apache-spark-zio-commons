@@ -25,6 +25,20 @@ class SparkSpec extends TestSpec with SparkMySqlTestSupport {
         case Right(value) => value mustBe a[SparkSession]
       }
     }
+    "loggerM" in {
+      whenReady(env.provideLayer(Spark.live).>>=(_.loggerM)) {
+        case Left(_) => fail()
+        case Right(value) => value mustBe a[Logger]
+      }
+    }
+    "sparkWithLogger" in {
+      whenReady(env.provideLayer(Spark.live).>>=(_.sparkWithLogger)) {
+        case Left(_) => fail()
+        case Right((session, logger)) =>
+          session mustBe a[SparkSession]
+          logger mustBe a[Logger]
+      }
+    }
     "apply" in {
       case class Service(spark: SparkSession, logger: Logger) {
         def createDummies(dummies: Dummy*): Dataset[Dummy] = {
