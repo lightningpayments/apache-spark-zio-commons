@@ -1,7 +1,7 @@
 package de.commons.lib.spark.testapps.sql101.test.logic.tables
 
-import de.commons.lib.spark.environments.io.SparkDataFrameReader
-import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameQueryReader
+import de.commons.lib.spark.io.SparkDataFrameReader
+import de.commons.lib.spark.io.SparkDataFrameReader.DataFrameQueryReader
 import de.commons.lib.spark.testapps.sql101.app.logic.tables.Customer
 import de.commons.lib.spark.testapps.sql101.test.CreateTablesSupport
 import de.commons.lib.spark.{MockDbTestSupport, SparkMySqlTestSupport, TestSpec}

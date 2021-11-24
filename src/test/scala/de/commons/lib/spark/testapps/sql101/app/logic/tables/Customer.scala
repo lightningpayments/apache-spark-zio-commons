@@ -1,6 +1,6 @@
 package de.commons.lib.spark.testapps.sql101.app.logic.tables
 
-import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameQueryReader
+import de.commons.lib.spark.io.SparkDataFrameReader.DataFrameQueryReader
 import de.commons.lib.spark.models.SqlQuery
 import org.apache.spark.sql._
 import org.apache.spark.sql.types.FloatType

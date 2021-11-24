@@ -1,8 +1,8 @@
 package de.commons.lib.spark.testapps.mongodb101.test.collections
 
 import cats.data.NonEmptyList
-import de.commons.lib.spark.environments.io.SparkDataFrameReader
-import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameMongoDbReader
+import de.commons.lib.spark.io.SparkDataFrameReader
+import de.commons.lib.spark.io.SparkDataFrameReader.DataFrameMongoDbReader
 import de.commons.lib.spark.testapps.mongodb101.app.logic.collections.Agent
 import de.commons.lib.spark.{MockMongoDbTestSupport, SparkMongoDbTestSupport, TestSpec}
 import org.bson.Document

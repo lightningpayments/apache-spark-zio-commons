@@ -21,6 +21,18 @@ class SparkRunnableSpec extends TestSpec with SparkMySqlTestSupport {
       val runnable: RunnableR[RandomInt, String] = RunnableR[RandomTrait[Int], String](Task.succeed("foo"))
       whenReady(runnable.run.provide(new RandomInt))(_ mustBe Right("foo"))
     }
+    "test contravariance with composable" in withSparkSession { implicit spark => implicit logger =>
+      trait RandomTrait[T] {
+        def random: Task[T]
+      }
+      val sparkR: SparkR with RandomTrait[Int] = new SparkR(configuration, logger) with RandomTrait[Int] {
+        override def random: Task[Int] = Task(Random.nextInt())
+      }
+
+      val runnable: RunnableR[SparkR with RandomTrait[Int], String] =
+        RunnableR[SparkR with RandomTrait[Int], String](Task.succeed("foo"))
+      whenReady(runnable.run.provide(sparkR))(_ mustBe Right("foo"))
+    }
   }
 
   "RunnableSparkRT#run" must {

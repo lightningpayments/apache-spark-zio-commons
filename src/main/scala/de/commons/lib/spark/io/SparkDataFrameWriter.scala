@@ -1,4 +1,4 @@
-package de.commons.lib.spark.environments.io
+package de.commons.lib.spark.io
 
 import cats.implicits.showInterpolator
 import de.commons.lib.spark.models.TableName

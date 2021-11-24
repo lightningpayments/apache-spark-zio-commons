@@ -1,7 +1,7 @@
 package de.commons.lib.spark.testapps.mongodb101.app.logic.collections
 
 import cats.data.NonEmptyList
-import de.commons.lib.spark.environments.io.SparkDataFrameReader.DataFrameMongoDbReader
+import de.commons.lib.spark.io.SparkDataFrameReader.DataFrameMongoDbReader
 import de.commons.lib.spark.models.{CollectionName, DbName}
 import org.apache.spark.sql.{Column, Dataset, Encoder, Encoders, SparkSession}
 

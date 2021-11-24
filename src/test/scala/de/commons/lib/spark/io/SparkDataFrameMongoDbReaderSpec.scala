@@ -1,4 +1,4 @@
-package de.commons.lib.spark.environments.io
+package de.commons.lib.spark.io
 
 import de.commons.lib.spark._
 import de.commons.lib.spark.models.{CollectionName, DbName}
