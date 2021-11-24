@@ -43,7 +43,7 @@ services:
 ```bash
 # download test db image
 docker pull ronakkany/spark-test-maria-db:latest
-docker run --name budni_dev_local_mysql -p 3306:3306 \
+docker run --name sparkdb -p 3306:3306 \
   -e MYSQL_ROOT_PASSWORD=password -d mysql --default-authentication-plugin=mysql_native_password
 docker exec -it <container-id> bash -l
 
