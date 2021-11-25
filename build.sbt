@@ -70,8 +70,7 @@ libraryDependencies ++= Seq(
   "org.mockito"             % "mockito-inline"             % "3.3.3"   % "test",
   "org.scalatestplus.play" %% "scalatestplus-play"         % "5.1.0"   % "test",
   "org.scalatestplus"      %% "scalacheck-1-14"            % "3.2.0.0" % "test",
-  "de.bwaldvogel"           % "mongo-java-server"          % "1.38.0" % "test",
-  "org.apache.archiva"      % "archiva"                    % "2.2.5" pomOnly()
+  "de.bwaldvogel"           % "mongo-java-server"          % "1.38.0"  % "test"
 )
 libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-jdk14")) }
 dependencyOverrides ++= Seq(log4j, slf4j, slf4jLog4j)
