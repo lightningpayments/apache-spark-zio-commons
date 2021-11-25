@@ -6,7 +6,7 @@ name := "Commons-Spark"
 organization := "de.lightningpayments"
 organizationHomepage := Option(url("https://www.lightning-payments.de"))
 organizationName := "lightningpayments"
-version := "0.3.0"
+version := "0.4.0"
 
 // -------------------------------------------------------------------------------------------------
 // Application
