@@ -27,15 +27,15 @@ trait SparkT {
 
   val unit: Task[Unit] = Task.unit
 
-  def apply[A](f: (SparkSession, Logger) => A): Task[A] = ZIO.tupledPar(sparkM, loggerM).map(f tupled)
+  def apply[A](f: (SparkSession, Logger) => A): Task[A] = sparkWithLogger.map(f tupled)
 
   def applyR[R, A](ff: => ZIO[R, Throwable, (SparkSession, Logger) => A]): ZIO[R, Throwable, A] =
-    ZIO.tupledPar(sparkM, loggerM).flatMap {
+    sparkWithLogger.flatMap {
       case (session, logger) => ff.map(_(session, logger))
     }
 
   def lift[F[_], A, B](f: (SparkSession, Logger) => A => B)(fa: => F[A])(implicit M: Functor[F]): Task[F[B]] =
-    ZIO.tupledPar(sparkM, loggerM).flatMap {
+    sparkWithLogger.flatMap {
       case (session, logger) => Task(M.fmap(fa)(f(session, logger)))
     }
 

@@ -7,7 +7,8 @@ import scala.language.higherKinds
 object MonadControl {
 
   /**
-   * replaces absent values inside [[Monad]]s. This is analogue to Option[T].getOrElse() but within the monadic context.
+   * replaces absent values inside [[Monad]]s.
+   * This is analogue to Option[T].getOrElse() but within the monadic context.
    */
   def foldM[F[_]: Monad, A](ffa: F[Option[A]])(orElse: => F[A]): F[A] = Monad[F].flatMap[Option[A], A](ffa) {
     case Some(a) => Monad[F].pure(a)
@@ -38,6 +39,7 @@ object MonadControl {
   implicit class RichOption[A](option: Option[A]) {
     def liftMOrElseM[F[_]](orElse: => F[A])(implicit A: Applicative[F]): F[A] =
       MonadControl.optionLiftMOrElseM(option)(orElse)
+
     def liftM[F[_], B](f: A => F[B])(implicit A: Applicative[F]): F[Option[B]] =
       MonadControl.optionLiftM(option)(f)
   }
