@@ -19,7 +19,7 @@ private[sql101] final class DbService(
   private val databaseInsert: DataFrameDatabaseWriter = DatabaseInsert(url, properties)
 
   def getAgents: ZIO[HasSpark, Throwable, Dataset[Agent]] =
-    sparkIO.flatMap(_.sparkWithLogger).map {
+    sparkIO.flatMap(_.sparkWithLoggerM).map {
       case (spark, logger) =>
         logger.debug("select all agents")
         Agent.select(databaseReader)(spark)
@@ -31,21 +31,21 @@ private[sql101] final class DbService(
       .map(_ => Agent.insert(ds)(databaseInsert))
 
   def getCustomers: ZIO[HasSpark, Throwable, Dataset[Customer]] =
-    sparkIO.flatMap(_.sparkWithLogger).map {
+    sparkIO.flatMap(_.sparkWithLoggerM).map {
       case (spark, logger) =>
         logger.debug("select all customers")
         Customer.select(databaseReader)(spark)
     }
 
   def getOrders: ZIO[HasSpark, Throwable, Dataset[Order]] =
-    sparkIO.flatMap(_.sparkWithLogger).map {
+    sparkIO.flatMap(_.sparkWithLoggerM).map {
       case (spark, logger) =>
         logger.debug("select all orders")
         Order.select(databaseReader)(spark)
     }
 
   def getAgentsStatistics: ZIO[HasSpark, Throwable, Dataset[JoinedAgentsOrdersCustomers]] =
-    sparkIO.flatMap(_.sparkWithLogger).map {
+    sparkIO.flatMap(_.sparkWithLoggerM).map {
       case (spark, logger) =>
         logger.debug("join agents via order via customers")
         JoinedAgentsOrdersCustomers.select(databaseReader)(spark)

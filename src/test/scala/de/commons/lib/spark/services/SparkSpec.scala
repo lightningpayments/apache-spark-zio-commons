@@ -31,8 +31,8 @@ class SparkSpec extends TestSpec with SparkMySqlTestSupport {
         case Right(value) => value mustBe a[Logger]
       }
     }
-    "sparkWithLogger" in {
-      whenReady(env.provideLayer(Spark.live).>>=(_.sparkWithLogger)) {
+    "sparkWithLoggerM" in {
+      whenReady(env.provideLayer(Spark.live).>>=(_.sparkWithLoggerM)) {
         case Left(_) => fail()
         case Right((session, logger)) =>
           session mustBe a[SparkSession]
@@ -57,11 +57,37 @@ class SparkSpec extends TestSpec with SparkMySqlTestSupport {
         case Left(_) => fail()
       }
     }
+    "curried" in {
+      case class Service(spark: SparkSession)(logger: Logger) {
+        def createDummies(dummies: Dummy*): Dataset[Dummy] = {
+          import Dummy._
+          logger.info("create dataset of dummies")
+          spark.createDataset(dummies)
+        }
+      }
+
+      val live = env.provideLayer(Spark.live)
+      val program =
+        live.>>=(_.curried(Service.apply).map(_.createDummies(Dummy(1), Dummy(2), Dummy(3))).map(_.collect().toList))
+
+      whenReady(program) {
+        case Right(unordered) => unordered.sortBy(_.value) mustBe (Dummy(1) :: Dummy(2) :: Dummy(3) :: Nil)
+        case Left(_) => fail()
+      }
+    }
     "applyR" in {
       def f(spark: SparkSession, logger: Logger): Int = 1
       val program = env
         .provideLayer(Spark.live)
         .>>=(_.applyR(ZIO.environment[ZEnv] >>> Task[(SparkSession, Logger) => Int](f)).provideLayer(ZEnv.live))
+
+      runtime.unsafeRun(program) mustBe 1
+    }
+    "curriedR" in {
+      def f(spark: SparkSession)(logger: Logger): Int = 1
+      val program = env
+        .provideLayer(Spark.live)
+        .>>=(_.curriedR(ZIO.environment[ZEnv] >>> Task[SparkSession => Logger => Int](f)).provideLayer(ZEnv.live))
 
       runtime.unsafeRun(program) mustBe 1
     }

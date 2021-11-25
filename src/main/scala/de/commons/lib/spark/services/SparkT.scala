@@ -1,12 +1,13 @@
 package de.commons.lib.spark.services
 
-import cats.Functor
+import cats.{Applicative, Functor}
 import de.commons.lib.spark.SparkSessionLoader
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
 import play.api.Configuration
 import zio.{Task, ZIO}
 
+import scala.Function
 import scala.language.{higherKinds, postfixOps}
 import scala.util.Try
 
@@ -23,19 +24,24 @@ trait SparkT {
 
   val loggerM: Task[Logger] = Task.succeed(logger)
 
-  val sparkWithLogger: Task[(SparkSession, Logger)] = ZIO.tupled(sparkM, loggerM)
+  val sparkWithLoggerM: Task[(SparkSession, Logger)] = ZIO.tupled(sparkM, loggerM)
 
-  val unit: Task[Unit] = Task.unit
+  def apply[A](f: (SparkSession, Logger) => A): Task[A] = sparkWithLoggerM.map(f tupled)
 
-  def apply[A](f: (SparkSession, Logger) => A): Task[A] = sparkWithLogger.map(f tupled)
+  def curried[A](f: SparkSession => Logger => A): Task[A] = sparkWithLoggerM.map(t => f(t._1)(t._2))
 
   def applyR[R, A](ff: => ZIO[R, Throwable, (SparkSession, Logger) => A]): ZIO[R, Throwable, A] =
-    sparkWithLogger.flatMap {
+    sparkWithLoggerM.flatMap {
       case (session, logger) => ff.map(_(session, logger))
     }
 
+  def curriedR[R, A](ff: => ZIO[R, Throwable, SparkSession => Logger => A]): ZIO[R, Throwable, A] =
+    sparkWithLoggerM.flatMap {
+      case (session, logger) => ff.map(_(session)(logger))
+    }
+
   def lift[F[_], A, B](f: (SparkSession, Logger) => A => B)(fa: => F[A])(implicit M: Functor[F]): Task[F[B]] =
-    sparkWithLogger.flatMap {
+    sparkWithLoggerM.flatMap {
       case (session, logger) => Task(M.fmap(fa)(f(session, logger)))
     }
 
