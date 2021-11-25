@@ -1,6 +1,8 @@
 # README
 
 - recommended java version: openjdk8
+- Spark 3.1.2
+- Scala 2.12.10
 
 ## application.conf minimal requirements database
 
@@ -19,7 +21,28 @@ spark {
 }
 ```
 
-## (optional) install test mongodb
+## usage
+
+```scala
+/* {{{ type HasSpark = Has[Service] }}} */
+val sparkIO: ZIO[HasSpark, Throwable, SparkT] = Spark.apply(configuration, logger)
+
+def getAgents: ZIO[HasSpark, Throwable, Dataset[Agent]] =
+  sparkIO.flatMap(_.sparkWithLoggerM).map {
+    case (spark, logger) =>
+      logger.debug("select all agents")
+      Agent.select(databaseReader)(spark)
+  }
+
+object SimpleApp extends zio.App {
+  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
+    val io: ZIO[HasSpark, Throwable, Unit] = getAgents.map(_.show()).as(())
+    io.provideLayer(Spark.live).exitCode
+  }
+}
+```
+
+## install test mongodb (optional)
 
 ```yaml
 # docker-compose.yml
@@ -38,7 +61,7 @@ services:
     restart: unless-stopped
 ```
 
-## (optional) install test db
+## install test db (optional)
 
 [Example DB](https://www.w3resource.com/sql/sql-table.php)
 
