@@ -21,7 +21,7 @@ spark {
 }
 ```
 
-## usage
+## usage Spark IO {{{ ZIO[HasSpark, Throwable, SparkT] }}}
 
 ```scala
 /* {{{ type HasSpark = Has[Service] }}} */
