@@ -22,6 +22,7 @@ assemblyMergeStrategy in assembly := {
 // Scala compiler settings
 // -------------------------------------------------------------------------------------------------
 fork in Test := true // @see https://github.com/sbt/sbt/issues/3022
+parallelExecution in Test := false
 scalacOptions in run ++= Seq(
   "-Dlog4j.debug=true",
   "-Dlog4j.configuration=log4j.properties"
