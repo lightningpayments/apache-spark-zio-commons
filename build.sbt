@@ -4,7 +4,7 @@
 // -------------------------------------------------------------------------------------------------
 name := "Commons-Spark"
 organization := "de.lightningpayments"
-organizationHomepage := Option(url("https://www.lightning-payments.de"))
+organizationHomepage := None
 organizationName := "lightningpayments"
 version := "0.4.0"
 
