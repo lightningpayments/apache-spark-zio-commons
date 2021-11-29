@@ -52,6 +52,6 @@ trait SparkMongoDbTestSupport {
 
   protected val client: MongoClient = MongoClients.create(mongoDbUrl)
 
-  def withSparkSession[A, T](f: SparkSession => Logger => T): T = f(spark)(logger)
+  def withSparkSession[A](f: SparkSession => Logger => A): A = f(spark)(logger)
 
 }
