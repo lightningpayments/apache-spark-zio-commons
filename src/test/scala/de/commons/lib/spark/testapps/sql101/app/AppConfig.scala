@@ -1,12 +1,15 @@
 package de.commons.lib.spark.testapps.sql101.app
 
+import ch.qos.logback.classic.LoggerContext
 import com.typesafe.config.ConfigFactory
 import de.commons.lib.spark.SparkSessionLoader
 import org.apache.log4j.{Logger => Log4jLogger}
+import org.slf4j.LoggerFactory
 import play.api.Configuration
 
 import java.util.Properties
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 trait AppConfig {
 
@@ -38,5 +41,10 @@ trait AppConfig {
   }
 
   protected implicit val loader: SparkSessionLoader = new SparkSessionLoader(configuration)
+
+  Try(LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]).map { ctx =>
+    ctx.stop()
+    org.slf4j.bridge.SLF4JBridgeHandler.uninstall()
+  }
 
 }

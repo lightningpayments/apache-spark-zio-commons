@@ -2,7 +2,7 @@ package de.commons.lib.spark.io
 
 import cats.implicits.showInterpolator
 import de.commons.lib.spark.models.{CollectionName, DbName, SqlQuery}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
 import java.util.Properties
 
@@ -27,5 +27,15 @@ object SparkDataFrameReader {
         .option("collection", show"$collectionName")
         .options(properties)
         .load()
+  }
+
+  final case class JsonReaderPath(path: String) extends Reader {
+    override def run(implicit sparkSession: SparkSession): DataFrame =
+      sparkSession.read.option("multiline", value = true).json(path)
+  }
+
+  final case class JsonReaderDataset(ds: Dataset[String]) extends Reader {
+    override def run(implicit sparkSession: SparkSession): DataFrame =
+      sparkSession.read.json(ds)
   }
 }

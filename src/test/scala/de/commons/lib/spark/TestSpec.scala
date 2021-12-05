@@ -5,7 +5,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, OptionValues}
-import org.scalatestplus.play.WsScalaTestClient
 import org.slf4j.LoggerFactory
 import zio.Task
 
@@ -16,7 +15,6 @@ class TestSpec
   extends AnyWordSpec
   with Matchers
   with OptionValues
-  with WsScalaTestClient
   with ScalaFutures
   with BeforeAndAfterEach {
 
