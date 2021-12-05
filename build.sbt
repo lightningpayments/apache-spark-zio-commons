@@ -2,7 +2,7 @@ name := "Commons-Spark"
 organization := "de.lightningpayments"
 organizationHomepage := None
 organizationName := "lightningpayments"
-version := "0.4.0"
+version := "0.5.0"
 
 addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.0" cross CrossVersion.full)
 
