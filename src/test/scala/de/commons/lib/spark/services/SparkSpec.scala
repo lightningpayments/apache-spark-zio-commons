@@ -92,32 +92,33 @@ class SparkSpec extends TestSpec with SparkMySqlTestSupport {
       runtime.unsafeRun(program) mustBe 1
     }
     "lift" in {
+      case class Dummy(spark: SparkSession, logger: Logger) {
+        def identity(a: String): String = a
+      }
       def f(spark: SparkSession, logger: Logger)(a: String): Int = 1
 
       val live = env.provideLayer(Spark.live)
 
       val program1: Task[Int] = live.>>=(_.lift(f)(Task("foo")).flatten)
-      whenReady(program1)(_ mustBe Right(1))
-
-      case class Dummy(spark: SparkSession, logger: Logger) {
-        def identity(a: String): String = a
-      }
       val program2: Task[String] =
         live.>>=(_.lift((spark, logger) => Dummy(spark, logger).identity)(Task("foo")).flatten)
+
+      whenReady(program1)(_ mustBe Right(1))
       whenReady(program2)(_ mustBe Right("foo"))
     }
     "liftR" in {
-      def f(spark: SparkSession, logger: Logger)(a: Int): Int = 1
-
-      val live = env.provideLayer(Spark.live)
-
-      whenReady(live.flatMap(_.liftR(f)(Task(1)).flatten))(_ mustBe Right(1))
-
       case class Dummy(spark: SparkSession, logger: Logger) {
         def identity(a: String): String = a
       }
+      def f(spark: SparkSession, logger: Logger)(a: Int): Int = 1
+
+      val live = env.provideLayer(Spark.live)
+      val program1: Task[Int] =
+        live.flatMap(_.liftR(f)(Task(1)).flatten)
       val program2: Task[String] =
         live.flatMap(_.liftR((spark, logger) => Dummy(spark, logger).identity)(Task("foo"))).flatten
+
+      whenReady(program1)(_ mustBe Right(1))
       whenReady(program2)(_ mustBe Right("foo"))
     }
     "raiseError" in {
