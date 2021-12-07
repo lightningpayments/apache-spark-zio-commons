@@ -15,8 +15,9 @@ object SparkDataFrameReader {
   }
 
   final case class DatabaseReader(url: String, properties: Properties)(query: SqlQuery) extends Reader {
-    override def run(implicit sparkSession: SparkSession): DataFrame =
+    override def run(implicit sparkSession: SparkSession): DataFrame = {
       sparkSession.read.jdbc(url, show"$query", properties)
+    }
   }
 
   final case class MongoDbReader(properties: Map[String, String])(dbName: DbName, collectionName: CollectionName)
