@@ -23,13 +23,17 @@ object RTFuture extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = {
     val a0 =
-      Future(println("a0 " + LocalDateTime.now()))
-        .flatMap(_ => Future(Thread.sleep(Random.nextInt(100))))
-        .flatMap(_ => Future(subtractSalesTax(100)))
+      Future {
+        println("a0 " + LocalDateTime.now())
+        Thread.sleep(Random.nextInt(1000))
+        subtractSalesTax(100)
+      }
     val a1 =
-      Future(println("a1 " + LocalDateTime.now()))
-        .flatMap(_ => Future(Thread.sleep(Random.nextInt(100))))
-        .flatMap(_ => Future(subtractSalesTax(100) + subtractSalesTax(100)))
+      Future {
+        println("a1 " + LocalDateTime.now())
+        Thread.sleep(Random.nextInt(1000))
+        subtractSalesTax(100) + subtractSalesTax(100)
+      }
     val a2 = for {
       _ <- Future(println("a2 " + LocalDateTime.now()))
       a <- a0
@@ -43,15 +47,15 @@ object RTFuture extends IOApp {
     val io0 =
       IO.fromFuture(
         IO(println("io0 " + LocalDateTime.now())) *>
-        IO(Thread.sleep(Random.nextInt(100))) *>
+        IO(Thread.sleep(Random.nextInt(1000))) *>
         IO(Future(subtractSalesTax(100)))
       )
     val io1 =
-      IO.fromFuture(
-        IO(println("io1 " + LocalDateTime.now())) *>
-        IO(Thread.sleep(Random.nextInt(100))) *>
-        IO(Future(subtractSalesTax(100) + subtractSalesTax(100)))
-      )
+      IO.fromFuture(IO(Future {
+        println("io1 " + LocalDateTime.now())
+        Thread.sleep(Random.nextInt(1000))
+        subtractSalesTax(100) + subtractSalesTax(100)
+      }))
     val io2 = IO(println("io2 " + LocalDateTime.now())) *> io0.flatMap(x => io0.map(x + _))
     (for {
       _  <- IO(println(s"***$withReferentialTransparency***"))
